@@ -8,6 +8,7 @@ public class HirehubBackendApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(HirehubBackendApplication.class, args);
+
 	}
 
 }
