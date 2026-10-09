@@ -34,4 +34,10 @@ public class GlobalExceptionHandler {
 
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
 	}
+	
+	@ExceptionHandler(InvalidUserIdException.class)
+	public ResponseEntity<?> handleInvalidUserException(InvalidUserIdException exception) {
+
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+	}
 }
