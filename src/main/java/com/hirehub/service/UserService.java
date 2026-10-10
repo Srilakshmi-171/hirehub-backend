@@ -2,12 +2,14 @@ package com.hirehub.service;
 
 import java.util.Optional;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.hirehub.dto.RegisterUserRequest;
 import com.hirehub.dto.UserResponse;
 import com.hirehub.entity.User;
 import com.hirehub.exception.DuplicateEmailException;
+import com.hirehub.exception.InvalidUserIdException;
 import com.hirehub.exception.UserNotFoundException;
 import com.hirehub.repository.UserRepository;
 
@@ -15,9 +17,11 @@ import com.hirehub.repository.UserRepository;
 public class UserService {
 
 	private UserRepository userRepository;
+	private PasswordEncoder passwordEncoder;
 
-	public UserService(UserRepository repository) {
+	public UserService(UserRepository repository, PasswordEncoder password) {
 		this.userRepository = repository;
+		this.passwordEncoder = password;
 	}
 
 	public UserResponse registerUser(RegisterUserRequest request) {
@@ -29,7 +33,7 @@ public class UserService {
 		UserResponse response = new UserResponse();
 		user.setName(request.getName());
 		user.setEmail(request.getEmail());
-		user.setPassword(request.getPassword());
+		user.setPassword(passwordEncoder.encode(request.getPassword()));
 		user.setRole("CANDIDATE");
 
 		User savedUser = userRepository.save(user);
@@ -43,6 +47,9 @@ public class UserService {
 	
 	public UserResponse getUserById(Long id) {
 	    // Step 1: Retrieve the User or throw UserNotFoundException
+		if(id<=0) {
+			throw new InvalidUserIdException("User Id is Invalid: "+id);
+		}
 		User user = userRepository.findById(id)
 			    .orElseThrow(
 			        () -> new UserNotFoundException("User not found with ID: " + id)
