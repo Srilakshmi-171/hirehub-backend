@@ -1,6 +1,7 @@
 package com.hirehub.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -39,5 +40,13 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<?> handleInvalidUserException(InvalidUserIdException exception) {
 
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+	}
+	
+	@ExceptionHandler(BadCredentialsException.class)
+	public ResponseEntity<String> handleBadCredentials(
+	        BadCredentialsException exception) {
+	    return ResponseEntity
+	            .status(HttpStatus.UNAUTHORIZED)
+	            .body("Invalid email or password");
 	}
 }
