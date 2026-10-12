@@ -8,6 +8,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import com.hirehub.exception.DuplicateEmailException;
+
+import java.nio.file.AccessDeniedException;
 import java.util.*;
 
 @RestControllerAdvice
@@ -49,4 +51,10 @@ public class GlobalExceptionHandler {
 	            .status(HttpStatus.UNAUTHORIZED)
 	            .body("Invalid email or password");
 	}
+	
+	@ExceptionHandler(AccessDeniedException.class)
+	public ResponseEntity<String> handleAccessDenied(AccessDeniedException exception){
+		return ResponseEntity.status(HttpStatus.FORBIDDEN).body("InValid Access");
+	}
+	
 }

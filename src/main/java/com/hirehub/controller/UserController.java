@@ -1,6 +1,10 @@
 package com.hirehub.controller;
 
 import org.springframework.web.bind.MethodArgumentNotValidException;
+
+import org.springframework.security.access.AccessDeniedException;
+
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,8 +31,15 @@ public class UserController {
 	}
 	
 	@GetMapping("/api/users/{id}")
-	public UserResponse getUser(@PathVariable Long id) {
+	public UserResponse getUser(@PathVariable Long id, Authentication authentication) throws AccessDeniedException {
+		Long loggedInUserId = (Long) authentication.getPrincipal();
+		boolean isAdmin = authentication.getAuthorities().stream()
+		        .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+		if (!loggedInUserId.equals(id) && !isAdmin) {
+		    throw new AccessDeniedException("You are not allowed to access this profile");
+		}
 		return userService.getUserById(id);
+		
 	}
 
 }
