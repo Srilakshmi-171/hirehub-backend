@@ -1,3 +1,4 @@
+
 package com.hirehub.security;
 
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -10,19 +11,21 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.DispatcherType;
 
 @Configuration
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http)
-            throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http) throws Exception {
 
         http
             .csrf(csrf -> csrf.disable())
@@ -34,19 +37,45 @@ public class SecurityConfig {
             .httpBasic(basic -> basic.disable())
 
             .exceptionHandling(exceptions -> exceptions
-                .authenticationEntryPoint((request, response, exception) ->
+                .authenticationEntryPoint((request, response, exception) -> {
                     response.sendError(
                         HttpServletResponse.SC_UNAUTHORIZED,
-                        "Authentication required")))
+                        "Authentication required"
+                    );
+                })
+                .accessDeniedHandler((request, response, exception) -> {
+                    System.out.println(
+                        "ACCESS DENIED: " + request.getMethod()
+                        + " " + request.getRequestURI()
+                    );
+
+                    System.out.println(
+                        "Exception: " + exception.getClass().getName()
+                    );
+
+                    response.sendError(
+                        HttpServletResponse.SC_FORBIDDEN,
+                        "Access denied"
+                    );
+                })
+            )
 
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    HttpMethod.POST,
-                    "/api/users/register",
-                    "/api/auth/login"
-                ).permitAll()
-                .anyRequest().authenticated()
-            )
+            	    .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+
+            	    .requestMatchers(
+            	        HttpMethod.POST,
+            	        "/api/users/register",
+            	        "/api/auth/login"
+            	    ).permitAll()
+
+            	    .requestMatchers(
+            	        HttpMethod.POST,
+            	        "/api/jobs"
+            	    ).hasRole("RECRUITER")
+
+            	    .anyRequest().authenticated()
+            	)
 
             .addFilterBefore(
                 jwtAuthenticationFilter,
@@ -58,7 +87,8 @@ public class SecurityConfig {
 
     @Bean
     public FilterRegistrationBean<JwtAuthenticationFilter>
-            jwtFilterServletRegistration(JwtAuthenticationFilter filter) {
+            jwtFilterServletRegistration(
+                    JwtAuthenticationFilter filter) {
 
         FilterRegistrationBean<JwtAuthenticationFilter> registration =
                 new FilterRegistrationBean<>(filter);

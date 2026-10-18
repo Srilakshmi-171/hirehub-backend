@@ -1,3 +1,4 @@
+
 package com.hirehub.security;
 
 import java.io.IOException;
@@ -41,7 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // No bearer token: let Spring Security handle authorization.
+        // No Bearer token: let Spring Security handle authorization.
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -52,6 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             // Validate the token and extract the user ID.
             Long userId = jwtService.extractUserId(jwtToken);
+
 
             // Find the user in the database.
             Optional<User> userOptional = userRepository.findById(userId);
@@ -80,10 +82,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext()
                     .setAuthentication(authentication);
 
+
             filterChain.doFilter(request, response);
 
         } catch (JwtException | IllegalArgumentException exception) {
             SecurityContextHolder.clearContext();
+
+
             response.sendError(
                     HttpServletResponse.SC_UNAUTHORIZED,
                     "Invalid or expired token");
