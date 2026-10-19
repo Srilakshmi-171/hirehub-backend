@@ -4,6 +4,8 @@ package com.hirehub.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -62,5 +64,28 @@ public class JobController {
         response.setRecruiterId(savedJob.getRecruiter().getId());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<JobResponse> getJobById(
+            @PathVariable Long id) {
+
+        Job job = jobService.getJobById(id);
+
+        JobResponse response = new JobResponse();
+        response.setId(job.getId());
+        response.setTitle(job.getTitle());
+        response.setCompanyName(job.getCompanyName());
+        response.setDescription(job.getDescription());
+        response.setLocation(job.getLocation());
+        response.setRequiredSkills(job.getRequiredSkills());
+        response.setSalary(job.getSalary());
+        response.setVacancies(job.getVacancies());
+        response.setExperienceLevel(job.getExperienceLevel());
+        response.setStatus(job.getStatus());
+        response.setCreatedAt(job.getCreatedAt());
+        response.setRecruiterId(job.getRecruiter().getId());
+
+        return ResponseEntity.ok(response);
     }
 }

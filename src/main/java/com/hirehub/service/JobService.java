@@ -2,6 +2,8 @@
 package com.hirehub.service;
 
 import org.springframework.stereotype.Service;
+import com.hirehub.exception.JobNotFoundException;
+import java.util.Optional;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.hirehub.dto.CreateJobRequest;
@@ -40,5 +42,12 @@ public class JobService {
         job.setRecruiter(recruiter);
 
         return jobRepository.save(job);
+    }
+    
+    public Job getJobById(Long id) {
+        return jobRepository.findById(id)
+                .orElseThrow(() ->
+                        new JobNotFoundException(
+                                "Job not found with id: " + id));
     }
 }
