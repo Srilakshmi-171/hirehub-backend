@@ -7,12 +7,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hirehub.dto.CreateJobRequest;
 import com.hirehub.dto.JobResponse;
+import com.hirehub.dto.UpdateJobRequest;
 import com.hirehub.entity.Job;
 import com.hirehub.entity.User;
 import com.hirehub.repository.UserRepository;
@@ -85,6 +87,33 @@ public class JobController {
         response.setStatus(job.getStatus());
         response.setCreatedAt(job.getCreatedAt());
         response.setRecruiterId(job.getRecruiter().getId());
+
+        return ResponseEntity.ok(response);
+    }
+    
+    @PutMapping("/{id}")
+    public ResponseEntity<JobResponse> updateJob(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateJobRequest request,
+            Authentication authentication) {
+
+        Long recruiterId = (Long) authentication.getPrincipal();
+
+        Job updatedJob = jobService.updateJob(id, request, recruiterId);
+
+        JobResponse response = new JobResponse();
+        response.setId(updatedJob.getId());
+        response.setTitle(updatedJob.getTitle());
+        response.setCompanyName(updatedJob.getCompanyName());
+        response.setDescription(updatedJob.getDescription());
+        response.setLocation(updatedJob.getLocation());
+        response.setRequiredSkills(updatedJob.getRequiredSkills());
+        response.setSalary(updatedJob.getSalary());
+        response.setVacancies(updatedJob.getVacancies());
+        response.setExperienceLevel(updatedJob.getExperienceLevel());
+        response.setStatus(updatedJob.getStatus());
+        response.setCreatedAt(updatedJob.getCreatedAt());
+        response.setRecruiterId(updatedJob.getRecruiter().getId());
 
         return ResponseEntity.ok(response);
     }

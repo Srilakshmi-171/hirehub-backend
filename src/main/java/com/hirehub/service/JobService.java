@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.hirehub.dto.CreateJobRequest;
+import com.hirehub.dto.UpdateJobRequest;
 import com.hirehub.entity.Job;
 import com.hirehub.entity.JobStatus;
 import com.hirehub.entity.User;
@@ -49,5 +50,26 @@ public class JobService {
                 .orElseThrow(() ->
                         new JobNotFoundException(
                                 "Job not found with id: " + id));
+    }
+    
+    @Transactional
+    public Job updateJob(Long jobId, UpdateJobRequest request, Long recruiterId) {
+        Job job = getJobById(jobId);
+
+        if (!job.getRecruiter().getId().equals(recruiterId)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "You are not authorized to update this job");
+        }
+
+        job.setTitle(request.getTitle());
+        job.setDescription(request.getDescription());
+        job.setCompanyName(request.getCompanyName());
+        job.setLocation(request.getLocation());
+        job.setRequiredSkills(request.getRequiredSkills());
+        job.setVacancies(request.getVacancies());
+        job.setSalary(request.getSalary());
+        job.setExperienceLevel(request.getExperienceLevel());
+
+        return jobRepository.save(job);
     }
 }
