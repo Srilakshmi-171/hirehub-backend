@@ -46,10 +46,15 @@ public class JobService {
     }
     
     public Job getJobById(Long id) {
-        return jobRepository.findById(id)
+        Job job = jobRepository.findById(id)
                 .orElseThrow(() ->
-                        new JobNotFoundException(
-                                "Job not found with id: " + id));
+                        new JobNotFoundException("Job not found with id: " + id));
+
+        if (job.isDeleted()) {
+            throw new JobNotFoundException("Job not found with id: " + id);
+        }
+
+        return job;
     }
     
     @Transactional
@@ -71,5 +76,18 @@ public class JobService {
         job.setExperienceLevel(request.getExperienceLevel());
 
         return jobRepository.save(job);
+    }
+    
+    @Transactional
+    public void deleteJob(Long jobId, Long recruiterId) {
+        Job job = getJobById(jobId);
+
+        if (!job.getRecruiter().getId().equals(recruiterId)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "You are not authorized to delete this job");
+        }
+
+        job.setDeleted(true);
+        jobRepository.save(job);
     }
 }

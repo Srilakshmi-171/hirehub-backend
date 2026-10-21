@@ -74,6 +74,7 @@ public class SecurityConfig {
             	        "/api/jobs"
             	    ).hasRole("RECRUITER")
             	    .requestMatchers(HttpMethod.PUT, "/api/jobs/**").hasRole("RECRUITER")
+            	    .requestMatchers(HttpMethod.DELETE, "/api/jobs/**").hasRole("RECRUITER")
 
             	    .anyRequest().authenticated()
             	)

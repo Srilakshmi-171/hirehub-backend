@@ -4,6 +4,7 @@ package com.hirehub.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -116,5 +117,17 @@ public class JobController {
         response.setRecruiterId(updatedJob.getRecruiter().getId());
 
         return ResponseEntity.ok(response);
+    }
+    
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteJob(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        Long recruiterId = (Long) authentication.getPrincipal();
+
+        jobService.deleteJob(id, recruiterId);
+
+        return ResponseEntity.noContent().build();
     }
 }

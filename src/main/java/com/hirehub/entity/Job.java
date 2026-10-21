@@ -1,6 +1,7 @@
 
 package com.hirehub.entity;
 
+import jakarta.persistence.Column;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -57,6 +58,9 @@ public class Job {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "recruiter_id", nullable = false)
     private User recruiter;
+    
+    @Column(nullable = false)
+    private boolean deleted = false;
 
     public Job() {
     }
@@ -166,5 +170,13 @@ public class Job {
 
     public void setRecruiter(User recruiter) {
         this.recruiter = recruiter;
+    }
+    
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 }
