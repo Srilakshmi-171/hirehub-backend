@@ -1,6 +1,8 @@
 
 package com.hirehub.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -129,5 +131,32 @@ public class JobController {
         jobService.deleteJob(id, recruiterId);
 
         return ResponseEntity.noContent().build();
+    }
+    
+    @GetMapping
+    public ResponseEntity<List<JobResponse>> getAllActiveJobs() {
+
+        List<Job> jobs = jobService.getAllActiveJobs();
+
+        List<JobResponse> responses = jobs.stream()
+                .map(job -> {
+                    JobResponse response = new JobResponse();
+                    response.setId(job.getId());
+                    response.setTitle(job.getTitle());
+                    response.setCompanyName(job.getCompanyName());
+                    response.setDescription(job.getDescription());
+                    response.setLocation(job.getLocation());
+                    response.setRequiredSkills(job.getRequiredSkills());
+                    response.setSalary(job.getSalary());
+                    response.setVacancies(job.getVacancies());
+                    response.setExperienceLevel(job.getExperienceLevel());
+                    response.setStatus(job.getStatus());
+                    response.setCreatedAt(job.getCreatedAt());
+                    response.setRecruiterId(job.getRecruiter().getId());
+                    return response;
+                })
+                .toList();
+
+        return ResponseEntity.ok(responses);
     }
 }

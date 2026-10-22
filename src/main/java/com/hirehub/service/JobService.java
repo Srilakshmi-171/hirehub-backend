@@ -3,6 +3,8 @@ package com.hirehub.service;
 
 import org.springframework.stereotype.Service;
 import com.hirehub.exception.JobNotFoundException;
+
+import java.util.List;
 import java.util.Optional;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -89,5 +91,9 @@ public class JobService {
 
         job.setDeleted(true);
         jobRepository.save(job);
+    }
+    
+    public List<Job> getAllActiveJobs() {
+        return jobRepository.findByDeletedFalse();
     }
 }
