@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hirehub.dto.CreateJobRequest;
@@ -24,6 +25,11 @@ import com.hirehub.repository.UserRepository;
 import com.hirehub.service.JobService;
 
 import jakarta.validation.Valid;
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/jobs")
@@ -159,4 +165,38 @@ public class JobController {
 
         return ResponseEntity.ok(responses);
     }
+    
+    @GetMapping("/search")
+    public ResponseEntity<List<JobResponse>> searchActiveJobs(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String location) {
+
+        List<JobResponse> responses = jobService
+                .searchActiveJobs(keyword, location)
+                .stream()
+                .map(this::mapToJobResponse)
+                .toList();
+
+        return ResponseEntity.ok(responses);
+    }
+
+    private JobResponse mapToJobResponse(Job job) {
+        JobResponse response = new JobResponse();
+        
+        response.setId(job.getId());
+        response.setTitle(job.getTitle());
+        response.setDescription(job.getDescription());
+        response.setLocation(job.getLocation());
+        response.setRequiredSkills(job.getRequiredSkills());
+        response.setSalary(job.getSalary());
+        response.setVacancies(job.getVacancies());
+        response.setExperienceLevel(job.getExperienceLevel());
+        response.setStatus(job.getStatus());
+        response.setCreatedAt(job.getCreatedAt());
+        response.setRecruiterId(job.getRecruiter().getId());
+        
+        return response;
+    }
+
+	
 }

@@ -96,4 +96,28 @@ public class JobService {
     public List<Job> getAllActiveJobs() {
         return jobRepository.findByDeletedFalse();
     }
+    
+    public List<Job> searchActiveJobs(String keyword, String location) {
+        if (keyword != null) {
+            keyword = keyword.trim();
+        }
+
+        if (location != null) {
+            location = location.trim();
+        }
+
+        if (keyword != null && keyword.isBlank()) {
+            keyword = null;
+        }
+
+        if (location != null && location.isBlank()) {
+            location = null;
+        }
+
+        if (keyword == null && location == null) {
+            return List.of();
+        }
+
+        return jobRepository.searchActiveJobs(keyword, location);
+    }
 }
