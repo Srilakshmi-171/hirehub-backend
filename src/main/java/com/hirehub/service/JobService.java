@@ -2,6 +2,8 @@
 package com.hirehub.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import com.hirehub.exception.JobNotFoundException;
 
 import java.util.List;
@@ -119,5 +121,9 @@ public class JobService {
         }
 
         return jobRepository.searchActiveJobs(keyword, location);
+    }
+    
+    public Page<Job> getActiveJobs(Pageable pageable) {
+        return jobRepository.findByDeletedFalse(pageable);
     }
 }

@@ -2,7 +2,10 @@
 package com.hirehub.controller;
 
 import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -139,32 +142,6 @@ public class JobController {
         return ResponseEntity.noContent().build();
     }
     
-    @GetMapping
-    public ResponseEntity<List<JobResponse>> getAllActiveJobs() {
-
-        List<Job> jobs = jobService.getAllActiveJobs();
-
-        List<JobResponse> responses = jobs.stream()
-                .map(job -> {
-                    JobResponse response = new JobResponse();
-                    response.setId(job.getId());
-                    response.setTitle(job.getTitle());
-                    response.setCompanyName(job.getCompanyName());
-                    response.setDescription(job.getDescription());
-                    response.setLocation(job.getLocation());
-                    response.setRequiredSkills(job.getRequiredSkills());
-                    response.setSalary(job.getSalary());
-                    response.setVacancies(job.getVacancies());
-                    response.setExperienceLevel(job.getExperienceLevel());
-                    response.setStatus(job.getStatus());
-                    response.setCreatedAt(job.getCreatedAt());
-                    response.setRecruiterId(job.getRecruiter().getId());
-                    return response;
-                })
-                .toList();
-
-        return ResponseEntity.ok(responses);
-    }
     
     @GetMapping("/search")
     public ResponseEntity<List<JobResponse>> searchActiveJobs(
@@ -196,6 +173,53 @@ public class JobController {
         response.setRecruiterId(job.getRecruiter().getId());
         
         return response;
+    }
+    
+    @GetMapping
+    public ResponseEntity<List<JobResponse>> getAllActiveJobs(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+
+        if (page < 0) {
+            throw new IllegalArgumentException("Page number cannot be negative");
+        }
+
+        if (size < 1 || size > 100) {
+            throw new IllegalArgumentException(
+                    "Page size must be between 1 and 100");
+        }
+
+        List<String> allowedSortFields = List.of(
+                "createdAt", "title", "salary", "location");
+
+        if (!allowedSortFields.contains(sortBy)) {
+            throw new IllegalArgumentException(
+                    "Invalid sort field: " + sortBy
+                    + ". Allowed fields: " + allowedSortFields);
+        }
+
+        Sort.Direction sortDirection;
+
+        try {
+            sortDirection = Sort.Direction.fromString(direction);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException(
+                    "Invalid sort direction. Use 'asc' or 'desc'.");
+        }
+
+        Pageable pageable = PageRequest.of(
+                page, size, Sort.by(sortDirection, sortBy));
+
+        Page<Job> jobsPage = jobService.getActiveJobs(pageable);
+
+        List<JobResponse> responses = jobsPage.getContent()
+                .stream()
+                .map(this::mapToJobResponse)
+                .toList();
+
+        return ResponseEntity.ok(responses);
     }
 
 	
