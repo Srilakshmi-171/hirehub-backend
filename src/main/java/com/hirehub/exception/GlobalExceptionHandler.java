@@ -75,4 +75,25 @@ public class GlobalExceptionHandler {
 	    return ResponseEntity.badRequest().body(error);
 	}
 	
+	
+	@ExceptionHandler(DuplicateApplicationException.class)
+	public ResponseEntity<String> handleDuplicateApplication(
+	        DuplicateApplicationException exception) {
+	
+	    return ResponseEntity
+	            .status(HttpStatus.CONFLICT)
+	            .body(exception.getMessage());
+	}
+	
+	
+	@ExceptionHandler(JobNotOpenException.class)
+	public ResponseEntity<String> handleJobNotOpen(
+	        JobNotOpenException exception) {
+	
+	    return ResponseEntity
+	            .status(HttpStatus.CONFLICT)
+	            .body(exception.getMessage());
+	}
+
+
 }
