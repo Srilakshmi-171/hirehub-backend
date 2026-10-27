@@ -94,6 +94,14 @@ public class GlobalExceptionHandler {
 	            .status(HttpStatus.CONFLICT)
 	            .body(exception.getMessage());
 	}
+	
+	@ExceptionHandler(ApplicationNotFoundException.class)
+	public ResponseEntity<String> handleApplicationNotFound(
+	        ApplicationNotFoundException exception) {
+
+	    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	            .body(exception.getMessage());
+	}
 
 
 }

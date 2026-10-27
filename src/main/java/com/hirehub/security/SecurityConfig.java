@@ -89,9 +89,15 @@ public class SecurityConfig {
 			    ).hasRole("RECRUITER")
 			
 			    .requestMatchers(
-			        HttpMethod.DELETE,
-			        "/api/jobs/**"
-			    ).hasRole("RECRUITER")
+			    	    HttpMethod.DELETE,
+			    	    "/api/jobs/**"
+			    	).hasRole("RECRUITER")
+
+			    	// Only recruiters can update application statuses
+			    .requestMatchers(
+			    	    HttpMethod.PATCH,
+			    	    "/api/applications/**"
+			    	).hasRole("RECRUITER")
 			
 			    // All other endpoints require authentication
 			    .anyRequest().authenticated()

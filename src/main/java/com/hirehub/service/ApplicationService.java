@@ -8,11 +8,12 @@ import com.hirehub.entity.ApplicationStatus;
 import com.hirehub.entity.Job;
 import com.hirehub.entity.JobStatus;
 import com.hirehub.entity.User;
+import com.hirehub.exception.ApplicationNotFoundException;
 import com.hirehub.exception.DuplicateApplicationException;
-import com.hirehub.exception.JobNotFoundException;
 import com.hirehub.exception.JobNotOpenException;
 import com.hirehub.repository.ApplicationRepository;
 import com.hirehub.repository.UserRepository;
+
 
 @Service
 public class ApplicationService {
@@ -62,4 +63,36 @@ public class ApplicationService {
 
         return applicationRepository.save(application);
     }
+    
+
+@Transactional
+public Application updateApplicationStatus(
+        Long applicationId,
+        Long recruiterId,
+        ApplicationStatus newStatus) {
+
+    // 1. Find the application.
+    Application application = applicationRepository
+            .findById(applicationId)
+            .orElseThrow(() -> new ApplicationNotFoundException(
+                    "Application not found with ID: " + applicationId));
+
+    // 2. Verify that the recruiter owns the job.
+    Long ownerId = application.getJob()
+            .getRecruiter()
+            .getId();
+
+    if (!ownerId.equals(recruiterId)) {
+        throw new org.springframework.security.access.AccessDeniedException(
+                "You do not own this job");
+    }
+
+    // 3. Update and save the status.
+    application.setStatus(newStatus);
+
+    return applicationRepository.save(application);
+}
+
+    
+    
 }
