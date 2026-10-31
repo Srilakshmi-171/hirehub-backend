@@ -98,6 +98,11 @@ public class SecurityConfig {
 			    	    HttpMethod.PATCH,
 			    	    "/api/applications/**"
 			    	).hasRole("RECRUITER")
+			    
+			    .requestMatchers(
+			            HttpMethod.DELETE,
+			            "/api/applications/**"
+			    ).hasRole("CANDIDATE")
 			
 			    // All other endpoints require authentication
 			    .anyRequest().authenticated()

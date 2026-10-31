@@ -10,6 +10,7 @@ import com.hirehub.service.ApplicationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -59,5 +60,20 @@ public class ApplicationController {
                 applicationService.getMyApplications(candidateId);
 
         return ResponseEntity.ok(applications);
+    }
+    
+    @DeleteMapping("/{applicationId}")
+    public ResponseEntity<String> withdrawApplication(
+            @PathVariable Long applicationId,
+            Authentication authentication) {
+
+        Long candidateId = (Long) authentication.getPrincipal();
+
+        applicationService.withdrawApplication(
+                applicationId,
+                candidateId);
+
+        return ResponseEntity.ok(
+                "Application withdrawn successfully");
     }
 }

@@ -97,29 +97,61 @@ public Application updateApplicationStatus(
     return applicationRepository.save(application);
 }
 
+	
+	public List<ApplicationResponse> getMyApplications(Long candidateId) {
+	
+	    List<Application> applications =
+	            applicationRepository.findByCandidateId(candidateId);
+	
+	    return applications.stream()
+	            .map(application -> {
+	                ApplicationResponse response = new ApplicationResponse();
+	
+	                response.setApplicationId(application.getId());
+	                response.setJobId(application.getJob().getId());
+	                response.setJobTitle(application.getJob().getTitle());
+	                response.setCompanyName(
+	                        application.getJob().getCompanyName());
+	                response.setLocation(application.getJob().getLocation());
+	                response.setStatus(application.getStatus());
+	                response.setAppliedAt(application.getAppliedAt());
+	
+	                return response;
+	            })
+	            .toList();
+	}
+	
+	@Transactional
+	public Application withdrawApplication(
+	        Long applicationId,
+	        Long candidateId) {
 
-public List<ApplicationResponse> getMyApplications(Long candidateId) {
+	    Application application = applicationRepository
+	            .findById(applicationId)
+	            .orElseThrow(() -> new ApplicationNotFoundException(
+	                    "Application not found with ID: " + applicationId));
 
-    List<Application> applications =
-            applicationRepository.findByCandidateId(candidateId);
+	    Long ownerId = application.getCandidate().getId();
 
-    return applications.stream()
-            .map(application -> {
-                ApplicationResponse response = new ApplicationResponse();
+	    if (!ownerId.equals(candidateId)) {
+	        throw new org.springframework.security.access.AccessDeniedException(
+	                "You can withdraw only your own application");
+	    }
 
-                response.setApplicationId(application.getId());
-                response.setJobId(application.getJob().getId());
-                response.setJobTitle(application.getJob().getTitle());
-                response.setCompanyName(
-                        application.getJob().getCompanyName());
-                response.setLocation(application.getJob().getLocation());
-                response.setStatus(application.getStatus());
-                response.setAppliedAt(application.getAppliedAt());
+	    ApplicationStatus currentStatus = application.getStatus();
 
-                return response;
-            })
-            .toList();
-}
-    
-    
+	    if (currentStatus == ApplicationStatus.SELECTED
+	            || currentStatus == ApplicationStatus.REJECTED
+	            || currentStatus == ApplicationStatus.WITHDRAWN) {
+
+	        throw new IllegalStateException(
+	                "Application cannot be withdrawn in its current status");
+	    }
+
+	    application.setStatus(ApplicationStatus.WITHDRAWN);
+
+	    return applicationRepository.save(application);
+	}
+	    
+	    
 }
