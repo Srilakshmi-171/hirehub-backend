@@ -1,5 +1,9 @@
 package com.hirehub.service;
 
+import com.hirehub.dto.ApplicationResponse;
+
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -93,6 +97,29 @@ public Application updateApplicationStatus(
     return applicationRepository.save(application);
 }
 
+
+public List<ApplicationResponse> getMyApplications(Long candidateId) {
+
+    List<Application> applications =
+            applicationRepository.findByCandidateId(candidateId);
+
+    return applications.stream()
+            .map(application -> {
+                ApplicationResponse response = new ApplicationResponse();
+
+                response.setApplicationId(application.getId());
+                response.setJobId(application.getJob().getId());
+                response.setJobTitle(application.getJob().getTitle());
+                response.setCompanyName(
+                        application.getJob().getCompanyName());
+                response.setLocation(application.getJob().getLocation());
+                response.setStatus(application.getStatus());
+                response.setAppliedAt(application.getAppliedAt());
+
+                return response;
+            })
+            .toList();
+}
     
     
 }
