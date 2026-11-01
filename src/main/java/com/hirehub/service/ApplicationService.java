@@ -14,25 +14,30 @@ import com.hirehub.entity.JobStatus;
 import com.hirehub.entity.User;
 import com.hirehub.exception.ApplicationNotFoundException;
 import com.hirehub.exception.DuplicateApplicationException;
+import com.hirehub.exception.JobNotFoundException;
 import com.hirehub.exception.JobNotOpenException;
 import com.hirehub.repository.ApplicationRepository;
+import com.hirehub.repository.JobRepository;
 import com.hirehub.repository.UserRepository;
 
-
+import java.util.List;
+import org.springframework.security.access.AccessDeniedException;
 @Service
 public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
     private final JobService jobService;
+    private final JobRepository jobRepository;
 
     public ApplicationService(
             ApplicationRepository applicationRepository,
             UserRepository userRepository,
-            JobService jobService) {
+            JobService jobService, JobRepository jobRepository) {
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
         this.jobService = jobService;
+        this.jobRepository = jobRepository;
     }
 
     @Transactional
@@ -151,6 +156,45 @@ public Application updateApplicationStatus(
 	    application.setStatus(ApplicationStatus.WITHDRAWN);
 
 	    return applicationRepository.save(application);
+	}
+	
+	public List<ApplicationResponse> getApplicantsForJob(
+	        Long jobId, Long recruiterId) {
+
+	    // Find the job or throw an exception
+	    Job job = jobRepository.findById(jobId)
+	            .orElseThrow(() ->
+	                    new JobNotFoundException("Job not found"));
+
+	    // Verify that the logged-in recruiter owns this job
+	    if (!job.getRecruiter().getId().equals(recruiterId)) {
+	        throw new AccessDeniedException(
+	                "You are not authorized to view applicants for this job");
+	    }
+
+	    // Retrieve all applications for this job
+	    List<Application> applications =
+	            applicationRepository.findByJobId(jobId);
+
+	    // Convert Application entities into ApplicationResponse DTOs
+	    return applications.stream()
+	            .map(application -> {
+	                ApplicationResponse response =
+	                        new ApplicationResponse();
+
+	                response.setApplicationId(application.getId());
+	                response.setJobId(application.getJob().getId());
+	                response.setJobTitle(application.getJob().getTitle());
+	                response.setCompanyName(
+	                        application.getJob().getCompanyName());
+	                response.setLocation(
+	                        application.getJob().getLocation());
+	                response.setStatus(application.getStatus());
+	                response.setAppliedAt(application.getAppliedAt());
+
+	                return response;
+	            })
+	            .toList();
 	}
 	    
 	    

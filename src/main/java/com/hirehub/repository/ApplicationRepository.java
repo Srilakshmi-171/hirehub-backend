@@ -10,4 +10,5 @@ public interface ApplicationRepository
 
     boolean existsByCandidateIdAndJobId(Long candidateId, Long jobId);
     List<Application> findByCandidateId(Long candidateId);
+    List<Application> findByJobId(Long jobId);
 }

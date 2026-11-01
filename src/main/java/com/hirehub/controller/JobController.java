@@ -19,12 +19,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hirehub.dto.ApplicationResponse;
 import com.hirehub.dto.CreateJobRequest;
 import com.hirehub.dto.JobResponse;
 import com.hirehub.dto.UpdateJobRequest;
 import com.hirehub.entity.Job;
 import com.hirehub.entity.User;
 import com.hirehub.repository.UserRepository;
+import com.hirehub.service.ApplicationService;
 import com.hirehub.service.JobService;
 
 import jakarta.validation.Valid;
@@ -40,12 +42,14 @@ public class JobController {
 
     private final JobService jobService;
     private final UserRepository userRepository;
+    private final ApplicationService applicationService;
 
     public JobController(
             JobService jobService,
-            UserRepository userRepository) {
+            UserRepository userRepository, ApplicationService applicationService) {
         this.jobService = jobService;
         this.userRepository = userRepository;
+        this.applicationService = applicationService;
     }
 
     @PostMapping
@@ -220,6 +224,19 @@ public class JobController {
                 .toList();
 
         return ResponseEntity.ok(responses);
+    }
+    
+    @GetMapping("/{jobId}/applications")
+    public ResponseEntity<List<ApplicationResponse>> getApplicantsForJob(
+            @PathVariable Long jobId,
+            Authentication authentication) {
+
+        Long recruiterId = (Long) authentication.getPrincipal();
+
+        List<ApplicationResponse> applications =
+                applicationService.getApplicantsForJob(jobId, recruiterId);
+
+        return ResponseEntity.ok(applications);
     }
 
 	
