@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.hirehub.dto.RegisterUserRequest;
+import com.hirehub.dto.UpdateCandidateProfileRequest;
 import com.hirehub.dto.UserResponse;
 import com.hirehub.entity.User;
 import com.hirehub.exception.DuplicateEmailException;
@@ -64,5 +65,39 @@ public class UserService {
 		response.setCreatedAt(user.getCreatedAt());
 	    // Step 4: Return UserResponse
 		return response;
+	}
+	
+	public UserResponse updateCandidateProfile(
+	        Long candidateId,
+	        UpdateCandidateProfileRequest request) {
+
+	    // 1. Find the candidate
+	    User user = userRepository.findById(candidateId)
+	            .orElseThrow(() ->
+	                    new UserNotFoundException(
+	                            "User not found with ID: " + candidateId));
+
+	    // 2. Ensure only candidates can update this profile
+	    if (!"CANDIDATE".equals(user.getRole())) {
+	        throw new org.springframework.security.access.AccessDeniedException(
+	                "Only candidates can update their profile");
+	    }
+
+	    // 3. Update the allowed field
+	    user.setName(request.getName());
+
+	    // 4. Save the updated user
+	    User updatedUser = userRepository.save(user);
+
+	    // 5. Return safe response fields
+	    UserResponse response = new UserResponse();
+
+	    response.setId(updatedUser.getId());
+	    response.setName(updatedUser.getName());
+	    response.setEmail(updatedUser.getEmail());
+	    response.setRole(updatedUser.getRole());
+	    response.setCreatedAt(updatedUser.getCreatedAt());
+
+	    return response;
 	}
 }

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hirehub.dto.CreateJobRequest;
 import com.hirehub.dto.RegisterUserRequest;
+import com.hirehub.dto.UpdateCandidateProfileRequest;
 import com.hirehub.dto.UserResponse;
 import com.hirehub.entity.Job;
 import com.hirehub.entity.User;
@@ -55,6 +56,17 @@ public class UserController {
 		
 	}
 	
-	
+	@PatchMapping("/api/candidates/me")
+	public ResponseEntity<UserResponse> updateCandidateProfile(
+	        @Valid @RequestBody UpdateCandidateProfileRequest request,
+	        Authentication authentication) {
+
+	    Long candidateId = (Long) authentication.getPrincipal();
+
+	    UserResponse response =
+	            userService.updateCandidateProfile(candidateId, request);
+
+	    return ResponseEntity.ok(response);
+	}
 
 }

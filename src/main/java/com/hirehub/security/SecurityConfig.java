@@ -111,10 +111,14 @@ public class SecurityConfig {
 			            HttpMethod.GET,
 			            "/api/recruiter/dashboard")
 			    .hasRole("RECRUITER")
+			    
+			    .requestMatchers(HttpMethod.PATCH, "/api/candidates/me")
+			    .hasRole("CANDIDATE")
 			
 			    // All other endpoints require authentication
 			    .anyRequest().authenticated()
 			)
+			
 
             .addFilterBefore(
                 jwtAuthenticationFilter,
