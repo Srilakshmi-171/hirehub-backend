@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.hirehub.entity.Job;
+import com.hirehub.entity.JobStatus;
 
 public interface JobRepository extends JpaRepository<Job, Long> {
 
@@ -31,5 +32,10 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     	);
     
     Page<Job> findByDeletedFalse(Pageable pageable);
+    
+    long countByRecruiterId(Long recruiterId);
+
+    long countByRecruiterIdAndStatus(
+            Long recruiterId, JobStatus status);
 
 }

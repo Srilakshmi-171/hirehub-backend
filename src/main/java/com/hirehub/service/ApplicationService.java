@@ -2,7 +2,9 @@ package com.hirehub.service;
 
 import com.hirehub.dto.ApplicationResponse;
 
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -195,6 +197,31 @@ public Application updateApplicationStatus(
 	                return response;
 	            })
 	            .toList();
+	}
+	
+	public Map<ApplicationStatus, Long> getApplicationCountsByStatus(
+	        Long recruiterId) {
+
+	    Map<ApplicationStatus, Long> counts =
+	            new EnumMap<>(ApplicationStatus.class);
+
+	    // Ensure statuses with no applications are also returned as 0
+	    for (ApplicationStatus status : ApplicationStatus.values()) {
+	        counts.put(status, 0L);
+	    }
+
+	    List<Object[]> results =
+	            applicationRepository
+	                    .countApplicationsByStatusForRecruiter(recruiterId);
+
+	    for (Object[] result : results) {
+	        ApplicationStatus status = (ApplicationStatus) result[0];
+	        Long count = (Long) result[1];
+
+	        counts.put(status, count);
+	    }
+
+	    return counts;
 	}
 	    
 	    
