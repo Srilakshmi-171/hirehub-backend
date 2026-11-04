@@ -102,6 +102,33 @@ public class GlobalExceptionHandler {
 	    return ResponseEntity.status(HttpStatus.NOT_FOUND)
 	            .body(exception.getMessage());
 	}
+	
+	@ExceptionHandler(RecruiterProfileNotFoundException.class)
+	public ResponseEntity<String> handleRecruiterProfileNotFound(
+	        RecruiterProfileNotFoundException ex) {
+
+	    return ResponseEntity
+	            .status(HttpStatus.NOT_FOUND)
+	            .body(ex.getMessage());
+	}
+
+	@ExceptionHandler(RecruiterProfileAlreadyExistsException.class)
+	public ResponseEntity<String> handleRecruiterProfileAlreadyExists(
+	        RecruiterProfileAlreadyExistsException ex) {
+
+	    return ResponseEntity
+	            .status(HttpStatus.CONFLICT)
+	            .body(ex.getMessage());
+	}
+	
+	@ExceptionHandler(ForbiddenAccessException.class)
+	public ResponseEntity<String> handleForbiddenAccess(
+	        ForbiddenAccessException ex) {
+
+	    return ResponseEntity
+	            .status(HttpStatus.FORBIDDEN)
+	            .body(ex.getMessage());
+	}
 
 
 }
