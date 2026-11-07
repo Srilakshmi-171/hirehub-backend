@@ -31,15 +31,20 @@ public class ApplicationService {
     private final UserRepository userRepository;
     private final JobService jobService;
     private final JobRepository jobRepository;
+    private final NotificationService notificationService;
 
     public ApplicationService(
             ApplicationRepository applicationRepository,
             UserRepository userRepository,
-            JobService jobService, JobRepository jobRepository) {
+            JobService jobService,
+            JobRepository jobRepository,
+            NotificationService notificationService) {
+
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
         this.jobService = jobService;
         this.jobRepository = jobRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -72,7 +77,16 @@ public class ApplicationService {
         application.setJob(job);
         application.setStatus(ApplicationStatus.APPLIED);
 
-        return applicationRepository.save(application);
+        Application savedApplication =
+                applicationRepository.save(application);
+
+        notificationService.createNotification(
+                job.getRecruiter(),
+                candidate.getName() + " applied for your job: "
+                        + job.getTitle(),
+                "APPLICATION");
+
+        return savedApplication;
     }
     
 
@@ -99,9 +113,24 @@ public Application updateApplicationStatus(
     }
 
     // 3. Update and save the status.
+    ApplicationStatus oldStatus = application.getStatus();
+
     application.setStatus(newStatus);
 
-    return applicationRepository.save(application);
+    Application updatedApplication =
+            applicationRepository.save(application);
+
+    if (oldStatus != newStatus) {
+        notificationService.createNotification(
+                application.getCandidate(),
+                "Your application for "
+                        + application.getJob().getTitle()
+                        + " has been updated to "
+                        + newStatus,
+                "STATUS_UPDATE");
+    }
+
+    return updatedApplication;
 }
 
 	
@@ -157,7 +186,17 @@ public Application updateApplicationStatus(
 
 	    application.setStatus(ApplicationStatus.WITHDRAWN);
 
-	    return applicationRepository.save(application);
+	    Application withdrawnApplication =
+	            applicationRepository.save(application);
+
+	    notificationService.createNotification(
+	            application.getJob().getRecruiter(),
+	            application.getCandidate().getName()
+	                    + " withdrew their application for "
+	                    + application.getJob().getTitle(),
+	            "WITHDRAWAL");
+
+	    return withdrawnApplication;
 	}
 	
 	public List<ApplicationResponse> getApplicantsForJob(
