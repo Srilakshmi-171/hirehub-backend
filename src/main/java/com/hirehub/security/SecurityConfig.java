@@ -60,65 +60,81 @@ public class SecurityConfig {
                 })
             )
 
-			
-			.authorizeHttpRequests(auth -> auth
-			    .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
-			
-			    .requestMatchers(
-			        HttpMethod.POST,
-			        "/api/users/register",
-			        "/api/auth/login"
-			    ).permitAll()
-			
-			    // Only recruiters can create jobs
-			    .requestMatchers(
-			        HttpMethod.POST,
-			        "/api/jobs"
-			    ).hasRole("RECRUITER")
-			
-			    // Only candidates can apply for jobs
-			    .requestMatchers(
-			        HttpMethod.POST,
-			        "/api/jobs/*/apply"
-			    ).hasRole("CANDIDATE")
-			
-			    // Only recruiters can update or delete jobs
-			    .requestMatchers(
-			        HttpMethod.PUT,
-			        "/api/jobs/**"
-			    ).hasRole("RECRUITER")
-			
-			    .requestMatchers(
-			    	    HttpMethod.DELETE,
-			    	    "/api/jobs/**"
-			    	).hasRole("RECRUITER")
+            .authorizeHttpRequests(auth -> auth
 
-			    	// Only recruiters can update application statuses
-			    .requestMatchers(
-			    	    HttpMethod.PATCH,
-			    	    "/api/applications/**"
-			    	).hasRole("RECRUITER")
-			    
-			    .requestMatchers(
-			            HttpMethod.DELETE,
-			            "/api/applications/**"
-			    ).hasRole("CANDIDATE")
-			    
-			    .requestMatchers(HttpMethod.GET, "/api/jobs/*/applications")
-			    .hasRole("RECRUITER")
-			    
-			    .requestMatchers(
-			            HttpMethod.GET,
-			            "/api/recruiter/dashboard")
-			    .hasRole("RECRUITER")
-			    
-			    .requestMatchers(HttpMethod.PATCH, "/api/candidates/me")
-			    .hasRole("CANDIDATE")
-			
-			    // All other endpoints require authentication
-			    .anyRequest().authenticated()
-			)
-			
+                .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+
+                // Public endpoints
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/api/users/register",
+                    "/api/auth/login"
+                ).permitAll()
+
+                // Only recruiters can create jobs
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/api/jobs"
+                ).hasRole("RECRUITER")
+
+                // Only candidates can apply for jobs
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/api/jobs/*/apply"
+                ).hasRole("CANDIDATE")
+
+                // Only recruiters can update jobs
+                .requestMatchers(
+                    HttpMethod.PUT,
+                    "/api/jobs/**"
+                ).hasRole("RECRUITER")
+
+                // Only candidates can remove saved jobs
+                // IMPORTANT: Must be before the general DELETE rule
+                .requestMatchers(
+                    HttpMethod.DELETE,
+                    "/api/jobs/*/save"
+                ).hasRole("CANDIDATE")
+
+                // Only recruiters can delete jobs
+                .requestMatchers(
+                    HttpMethod.DELETE,
+                    "/api/jobs/**"
+                ).hasRole("RECRUITER")
+
+                // Only recruiters can update application statuses
+                .requestMatchers(
+                    HttpMethod.PATCH,
+                    "/api/applications/**"
+                ).hasRole("RECRUITER")
+
+                // Only candidates can withdraw applications
+                .requestMatchers(
+                    HttpMethod.DELETE,
+                    "/api/applications/**"
+                ).hasRole("CANDIDATE")
+
+                // Only recruiters can view applicants
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/jobs/*/applications"
+                ).hasRole("RECRUITER")
+
+                // Recruiter dashboard
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/recruiter/dashboard"
+                ).hasRole("RECRUITER")
+
+                // Candidate profile update
+                .requestMatchers(
+                    HttpMethod.PATCH,
+                    "/api/candidates/me"
+                ).hasRole("CANDIDATE")
+
+                // All remaining endpoints require authentication
+                .anyRequest().authenticated()
+            )
 
             .addFilterBefore(
                 jwtAuthenticationFilter,
