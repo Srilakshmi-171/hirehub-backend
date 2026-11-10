@@ -129,6 +129,26 @@ public class GlobalExceptionHandler {
 	            .status(HttpStatus.FORBIDDEN)
 	            .body(ex.getMessage());
 	}
+	
+	
+	@ExceptionHandler(ResumeNotFoundException.class)
+	public ResponseEntity<String> handleResumeNotFound(
+	        ResumeNotFoundException ex) {
+	
+	    return ResponseEntity
+	            .status(HttpStatus.NOT_FOUND)
+	            .body(ex.getMessage());
+	}
+	
+	@ExceptionHandler(InvalidResumeException.class)
+	public ResponseEntity<String> handleInvalidResume(
+	        InvalidResumeException ex) {
+	
+	    return ResponseEntity
+	            .status(HttpStatus.BAD_REQUEST)
+	            .body(ex.getMessage());
+	}
+
 
 
 }

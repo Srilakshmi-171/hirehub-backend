@@ -131,6 +131,28 @@ public class SecurityConfig {
                     HttpMethod.PATCH,
                     "/api/candidates/me"
                 ).hasRole("CANDIDATE")
+                
+             // Candidate resume management
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/api/candidates/me/resume"
+                ).hasRole("CANDIDATE")
+
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/candidates/me/resume",
+                    "/api/candidates/me/resume/download"
+                ).hasRole("CANDIDATE")
+
+                .requestMatchers(
+                    HttpMethod.DELETE,
+                    "/api/candidates/me/resume"
+                ).hasRole("CANDIDATE")
+                
+                .requestMatchers(
+                	    HttpMethod.GET,
+                	    "/api/applications/*/resume"
+                	).hasRole("RECRUITER")
 
                 // All remaining endpoints require authentication
                 .anyRequest().authenticated()
