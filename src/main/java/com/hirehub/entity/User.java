@@ -21,6 +21,10 @@ public class User {
 	String password;
 	String name;
 	String role;
+	
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private AccountStatus accountStatus = AccountStatus.ACTIVE;
 
 	LocalDateTime createdAt = LocalDateTime.now();
 
@@ -70,6 +74,14 @@ public class User {
 
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
+	}
+	
+	public AccountStatus getAccountStatus() {
+	    return accountStatus;
+	}
+
+	public void setAccountStatus(AccountStatus accountStatus) {
+	    this.accountStatus = accountStatus;
 	}
 
 }

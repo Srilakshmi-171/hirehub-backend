@@ -1,6 +1,7 @@
 package com.hirehub.service;
 
 import java.util.Optional;
+import com.hirehub.entity.AccountStatus;
 
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,20 +32,29 @@ public class AuthService {
     }
     
     public LoginResponse login(LoginRequest request) {
-        // Implement the login flow here
-    	
-    	User user = userRepository.findByEmail(request.getEmail())
-    		    .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
-    	
-    	if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-    	    throw new BadCredentialsException("Invalid email or password");
-    	}
-    	
-    	String result = jwtService.generateToken(user);
-    	LoginResponse response = new LoginResponse();
-    	response.setToken(result);
-    	
-    	return response;
 
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BadCredentialsException(
+                        "Invalid email or password"));
+        
+        System.out.println("Login email: " + user.getEmail());
+        System.out.println("Account status: " + user.getAccountStatus());
+
+        if (user.getAccountStatus() != AccountStatus.ACTIVE) {
+            throw new BadCredentialsException(
+                    "Your account is inactive. Please contact the administrator.");
+        }
+
+        if (!passwordEncoder.matches(
+                request.getPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Invalid email or password");
+        }
+
+        String result = jwtService.generateToken(user);
+
+        LoginResponse response = new LoginResponse();
+        response.setToken(result);
+
+        return response;
     }
 }
