@@ -1,6 +1,7 @@
 package com.hirehub.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -37,5 +38,6 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
     long countByRecruiterIdAndStatus(
             Long recruiterId, JobStatus status);
+    
 
 }

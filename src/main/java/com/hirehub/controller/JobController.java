@@ -163,9 +163,10 @@ public class JobController {
 
     private JobResponse mapToJobResponse(Job job) {
         JobResponse response = new JobResponse();
-        
+
         response.setId(job.getId());
         response.setTitle(job.getTitle());
+        response.setCompanyName(job.getCompanyName()); // Added
         response.setDescription(job.getDescription());
         response.setLocation(job.getLocation());
         response.setRequiredSkills(job.getRequiredSkills());
@@ -175,7 +176,7 @@ public class JobController {
         response.setStatus(job.getStatus());
         response.setCreatedAt(job.getCreatedAt());
         response.setRecruiterId(job.getRecruiter().getId());
-        
+
         return response;
     }
     
