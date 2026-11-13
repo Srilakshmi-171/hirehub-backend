@@ -154,7 +154,40 @@ public class SecurityConfig {
                 	    "/api/applications/*/resume"
                 	).hasRole("RECRUITER")
                 
+             // Only recruiters can schedule interviews
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/api/applications/*/interviews"
+                ).hasRole("RECRUITER")
+
+                // Candidates and recruiters must be authenticated to view interviews
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/applications/*/interviews"
+                ).hasAnyRole("CANDIDATE", "RECRUITER")
+                
+                .requestMatchers(
+                	    HttpMethod.PATCH,
+                	    "/api/interviews/*/response"
+                	).hasRole("CANDIDATE")
+                
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                
+                .requestMatchers(HttpMethod.PATCH, "/api/interviews/*/reschedule")
+                .hasRole("CANDIDATE")
+                
+                .requestMatchers(HttpMethod.PATCH,
+                        "/api/interviews/*/reschedule-decision")
+                .hasRole("RECRUITER")
+                        
+                .requestMatchers(HttpMethod.PATCH, "/api/interviews/*/cancel")
+                .hasRole("RECRUITER")
+                
+                .requestMatchers(HttpMethod.PATCH, "/api/interviews/*/complete")
+                .hasRole("RECRUITER")
+                
+                .requestMatchers(HttpMethod.GET, "/api/interviews/*/feedback")
+                .hasRole("RECRUITER")
 
                 // All remaining endpoints require authentication
                 .anyRequest().authenticated()
