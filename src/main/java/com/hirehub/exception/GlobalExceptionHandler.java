@@ -159,6 +159,23 @@ public class GlobalExceptionHandler {
 	            .body(exception.getMessage());
 	}
 
-
+	
+	@ExceptionHandler(CandidatePreferenceNotFoundException.class)
+	public ResponseEntity<String> handleCandidatePreferenceNotFound(
+	        CandidatePreferenceNotFoundException exception) {
+	
+	    return ResponseEntity
+	            .status(HttpStatus.NOT_FOUND)
+	            .body(exception.getMessage());
+	}
+	
+	@ExceptionHandler(CandidatePreferenceAlreadyExistsException.class)
+	public ResponseEntity<String> handleCandidatePreferenceAlreadyExists(
+	        CandidatePreferenceAlreadyExistsException exception) {
+	
+	    return ResponseEntity
+	            .status(HttpStatus.CONFLICT)
+	            .body(exception.getMessage());
+	}
 
 }

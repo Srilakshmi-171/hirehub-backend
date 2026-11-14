@@ -132,6 +132,24 @@ public class SecurityConfig {
                     "/api/candidates/me"
                 ).hasRole("CANDIDATE")
                 
+	
+	             // Candidate preference management
+	             .requestMatchers(
+	                 HttpMethod.POST,
+	                 "/api/candidates/me/preferences"
+	             ).hasRole("CANDIDATE")
+	
+	             .requestMatchers(
+	                 HttpMethod.GET,
+	                 "/api/candidates/me/preferences"
+	             ).hasRole("CANDIDATE")
+	
+	             .requestMatchers(
+	                 HttpMethod.PUT,
+	                 "/api/candidates/me/preferences"
+	             ).hasRole("CANDIDATE")
+
+                
              // Candidate resume management
                 .requestMatchers(
                     HttpMethod.POST,
