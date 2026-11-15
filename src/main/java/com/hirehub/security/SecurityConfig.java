@@ -212,6 +212,11 @@ public class SecurityConfig {
                     HttpMethod.GET,
                     "/api/candidates/me/recommendations"
                 ).hasRole("CANDIDATE")
+                
+                .requestMatchers(
+                	    "/api/candidates/me/saved-searches",
+                	    "/api/candidates/me/saved-searches/**"
+                	).hasRole("CANDIDATE")
 
                 // All remaining endpoints require authentication
                 .anyRequest().authenticated()
