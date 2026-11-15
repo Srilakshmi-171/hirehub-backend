@@ -206,6 +206,12 @@ public class SecurityConfig {
                 
                 .requestMatchers(HttpMethod.GET, "/api/interviews/*/feedback")
                 .hasRole("RECRUITER")
+                
+             // Only candidates can view job recommendations
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/candidates/me/recommendations"
+                ).hasRole("CANDIDATE")
 
                 // All remaining endpoints require authentication
                 .anyRequest().authenticated()

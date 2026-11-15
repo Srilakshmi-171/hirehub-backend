@@ -4,6 +4,7 @@ package com.hirehub.dto;
 import java.math.BigDecimal;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 
 public class CreateJobRequest {
@@ -29,7 +30,11 @@ public class CreateJobRequest {
     @Positive(message = "Salary must be greater than zero")
     private BigDecimal salary;
 
-    private String experienceLevel;
+    @Pattern(
+    	    regexp = "^(FRESHER|0-1|1-2|2-3|3-5|5\\+)$",
+    	    message = "Experience level must be FRESHER, 0-1, 1-2, 2-3, 3-5, or 5+"
+    	)
+    	private String experienceLevel;
 
     public CreateJobRequest() {
     }
@@ -97,4 +102,6 @@ public class CreateJobRequest {
     public void setExperienceLevel(String experienceLevel) {
         this.experienceLevel = experienceLevel;
     }
+    
+    
 }

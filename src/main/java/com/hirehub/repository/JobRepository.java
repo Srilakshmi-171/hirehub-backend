@@ -39,5 +39,7 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     long countByRecruiterIdAndStatus(
             Long recruiterId, JobStatus status);
     
+    List<Job> findByDeletedFalseAndStatus(JobStatus status);
+    
 
 }

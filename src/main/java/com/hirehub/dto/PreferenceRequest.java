@@ -6,6 +6,7 @@ import java.util.Set;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class PreferenceRequest {
@@ -27,7 +28,10 @@ public class PreferenceRequest {
     > preferredLocations;
 
     @NotBlank(message = "Experience level is required")
-    @Size(max = 30, message = "Experience level cannot exceed 30 characters")
+    @Pattern(
+        regexp = "^(FRESHER|0-1|1-2|2-3|3-5|5\\+)$",
+        message = "Experience level must be FRESHER, 0-1, 1-2, 2-3, 3-5, or 5+"
+    )
     private String experienceLevel;
 
     @NotNull(message = "Remote preference is required")

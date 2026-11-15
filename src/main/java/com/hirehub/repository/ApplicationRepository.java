@@ -48,4 +48,12 @@ public interface ApplicationRepository
 
     List<Application> findTop5ByCandidateIdOrderByAppliedAtDesc(
             Long candidateId);
+    
+    @Query("""
+            SELECT a.job.id
+            FROM Application a
+            WHERE a.candidate.id = :candidateId
+            """)
+    List<Long> findAppliedJobIdsByCandidateId(
+            @Param("candidateId") Long candidateId);
 }
