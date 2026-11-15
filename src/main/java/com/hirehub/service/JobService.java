@@ -21,9 +21,14 @@ import com.hirehub.repository.JobRepository;
 public class JobService {
 
     private final JobRepository jobRepository;
+    private final JobAlertService jobAlertService;
 
-    public JobService(JobRepository jobRepository) {
+    public JobService(
+            JobRepository jobRepository,
+            JobAlertService jobAlertService) {
+
         this.jobRepository = jobRepository;
+        this.jobAlertService = jobAlertService;
     }
 
     @Transactional
@@ -40,13 +45,15 @@ public class JobService {
         job.setSalary(request.getSalary());
         job.setExperienceLevel(request.getExperienceLevel());
 
-        // The server controls the initial status.
         job.setStatus(JobStatus.OPEN);
-
-        // Link the job to the authenticated recruiter.
         job.setRecruiter(recruiter);
 
-        return jobRepository.save(job);
+        Job savedJob = jobRepository.save(job);
+
+        // Notify candidates whose saved searches match this job.
+        jobAlertService.sendJobAlerts(savedJob);
+
+        return savedJob;
     }
     
     public Job getJobById(Long id) {
