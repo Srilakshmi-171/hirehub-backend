@@ -217,6 +217,12 @@ public class SecurityConfig {
                 	    "/api/candidates/me/saved-searches",
                 	    "/api/candidates/me/saved-searches/**"
                 	).hasRole("CANDIDATE")
+                
+             // Recruiter analytics
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/recruiter/analytics"
+                ).hasRole("RECRUITER")
 
                 // All remaining endpoints require authentication
                 .anyRequest().authenticated()

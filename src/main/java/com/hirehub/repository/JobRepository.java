@@ -1,5 +1,6 @@
 package com.hirehub.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,6 +41,49 @@ public interface JobRepository extends JpaRepository<Job, Long> {
             Long recruiterId, JobStatus status);
     
     List<Job> findByDeletedFalseAndStatus(JobStatus status);
+    
+    @Query("""
+    	    SELECT COUNT(j)
+    	    FROM Job j
+    	    WHERE j.recruiter.id = :recruiterId
+    	    AND (:startDate IS NULL OR j.createdAt >= :startDate)
+    	    AND (:endDate IS NULL OR j.createdAt <= :endDate)
+    	    """)
+    	long countTotalJobsForAnalytics(
+    	        @Param("recruiterId") Long recruiterId,
+    	        @Param("startDate") LocalDateTime startDate,
+    	        @Param("endDate") LocalDateTime endDate
+    	);
+
+    	@Query("""
+    	    SELECT COUNT(j)
+    	    FROM Job j
+    	    WHERE j.recruiter.id = :recruiterId
+    	    AND j.deleted = false
+    	    AND j.status = :status
+    	    AND (:startDate IS NULL OR j.createdAt >= :startDate)
+    	    AND (:endDate IS NULL OR j.createdAt <= :endDate)
+    	    """)
+    	long countActiveJobsByStatusForAnalytics(
+    	        @Param("recruiterId") Long recruiterId,
+    	        @Param("status") JobStatus status,
+    	        @Param("startDate") LocalDateTime startDate,
+    	        @Param("endDate") LocalDateTime endDate
+    	);
+
+    	@Query("""
+    	    SELECT COUNT(j)
+    	    FROM Job j
+    	    WHERE j.recruiter.id = :recruiterId
+    	    AND j.deleted = true
+    	    AND (:startDate IS NULL OR j.createdAt >= :startDate)
+    	    AND (:endDate IS NULL OR j.createdAt <= :endDate)
+    	    """)
+    	long countDeletedJobsForAnalytics(
+    	        @Param("recruiterId") Long recruiterId,
+    	        @Param("startDate") LocalDateTime startDate,
+    	        @Param("endDate") LocalDateTime endDate
+    	);
     
 
 }
