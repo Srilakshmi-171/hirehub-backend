@@ -84,6 +84,29 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     	        @Param("startDate") LocalDateTime startDate,
     	        @Param("endDate") LocalDateTime endDate
     	);
+    	
+
+        // Recruiter job performance report query
+        @Query("""
+                SELECT j.id, j.title, j.location, j.status,
+                       j.createdAt, j.deleted, COUNT(a)
+                FROM Job j
+                LEFT JOIN Application a ON a.job = j
+                WHERE j.recruiter.id = :recruiterId
+                AND (:jobId IS NULL OR j.id = :jobId)
+                AND (:startDate IS NULL OR j.createdAt >= :startDate)
+                AND (:endDate IS NULL OR j.createdAt <= :endDate)
+                GROUP BY j.id, j.title, j.location, j.status,
+                         j.createdAt, j.deleted
+                ORDER BY j.createdAt DESC
+                """)
+        List<Object[]> findJobsForRecruiterReport(
+                @Param("recruiterId") Long recruiterId,
+                @Param("jobId") Long jobId,
+                @Param("startDate") LocalDateTime startDate,
+                @Param("endDate") LocalDateTime endDate
+        );
+
     
 
 }

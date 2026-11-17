@@ -223,6 +223,9 @@ public class SecurityConfig {
                     HttpMethod.GET,
                     "/api/recruiter/analytics"
                 ).hasRole("RECRUITER")
+                
+                .requestMatchers("/api/recruiter/reports/**")
+                .hasRole("RECRUITER")
 
                 // All remaining endpoints require authentication
                 .anyRequest().authenticated()

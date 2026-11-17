@@ -2,6 +2,7 @@
 package com.hirehub.repository;
 
 import java.util.List;
+import com.hirehub.entity.Interview;
 import java.time.LocalDateTime;
 
 import org.springframework.data.jpa.repository.Query;
@@ -62,5 +63,27 @@ public interface InterviewRepository extends JpaRepository<Interview, Long> {
 	        @Param("startDate") LocalDateTime startDate,
 	        @Param("endDate") LocalDateTime endDate
 	);
+	
+
+    // Recruiter interview report query
+    @Query("""
+            SELECT i
+            FROM Interview i
+            JOIN FETCH i.application a
+            JOIN FETCH a.candidate
+            JOIN FETCH a.job j
+            WHERE j.recruiter.id = :recruiterId
+            AND (:jobId IS NULL OR j.id = :jobId)
+            AND (:startDate IS NULL OR i.scheduledAt >= :startDate)
+            AND (:endDate IS NULL OR i.scheduledAt <= :endDate)
+            ORDER BY i.scheduledAt DESC
+            """)
+    List<Interview> findInterviewsForRecruiterReport(
+            @Param("recruiterId") Long recruiterId,
+            @Param("jobId") Long jobId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
 
 }

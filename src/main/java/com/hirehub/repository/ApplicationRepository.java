@@ -91,4 +91,24 @@ public interface ApplicationRepository
 	);
 
 
+    // Recruiter application report query
+    @Query("""
+            SELECT a
+            FROM Application a
+            JOIN FETCH a.candidate
+            JOIN FETCH a.job
+            WHERE a.job.recruiter.id = :recruiterId
+            AND (:jobId IS NULL OR a.job.id = :jobId)
+            AND (:startDate IS NULL OR a.appliedAt >= :startDate)
+            AND (:endDate IS NULL OR a.appliedAt <= :endDate)
+            ORDER BY a.appliedAt DESC
+            """)
+    List<Application> findApplicationsForRecruiterReport(
+            @Param("recruiterId") Long recruiterId,
+            @Param("jobId") Long jobId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+
 }
