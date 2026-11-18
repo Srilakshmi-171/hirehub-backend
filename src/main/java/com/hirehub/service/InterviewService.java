@@ -25,6 +25,7 @@ import com.hirehub.exception.ApplicationNotFoundException;
 import com.hirehub.repository.ApplicationRepository;
 import com.hirehub.repository.InterviewRepository;
 import com.hirehub.repository.UserRepository;
+import com.hirehub.util.EmailTemplateUtil;
 
 @Service
 public class InterviewService {
@@ -33,17 +34,20 @@ public class InterviewService {
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final EmailService emailService;
 
     public InterviewService(
             InterviewRepository interviewRepository,
             ApplicationRepository applicationRepository,
             UserRepository userRepository,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            EmailService emailService) {
 
         this.interviewRepository = interviewRepository;
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
+        this.emailService = emailService;
     }
 
     // Recruiter schedules an interview
@@ -128,6 +132,22 @@ public class InterviewService {
                         + " (Round " + request.getRoundNumber() + ") "
                         + "for " + application.getJob().getTitle(),
                 "INTERVIEW");
+
+        // Send interview scheduled email
+        String htmlBody = EmailTemplateUtil.interviewScheduled(
+                application.getCandidate().getName(),
+                application.getJob().getTitle(),
+                request.getInterviewTitle(),
+                request.getScheduledAt().toString(),
+                request.getMode().name(),
+                request.getMeetingLink()
+        );
+
+        emailService.sendHtmlEmail(
+                application.getCandidate().getEmail(),
+                "Interview Scheduled - " + request.getInterviewTitle(),
+                htmlBody
+        );
 
         return convertToResponse(savedInterview);
     }
@@ -367,7 +387,7 @@ public class InterviewService {
 
         return convertToResponse(updatedInterview);
     }
-    
+
     @Transactional
     public InterviewResponse cancelInterview(Long interviewId, Long recruiterId) {
 
@@ -403,7 +423,7 @@ public class InterviewService {
 
         return convertToResponse(interview);
     }
-    
+
     @Transactional
     public InterviewResponse completeInterview(
             Long interviewId,
@@ -444,7 +464,7 @@ public class InterviewService {
 
         return convertToResponse(interview);
     }
-    
+
     @Transactional(readOnly = true)
     public InterviewFeedbackResponse getInterviewFeedback(
             Long interviewId, Long recruiterId) {
@@ -473,5 +493,4 @@ public class InterviewService {
 
         return response;
     }
-    
 }

@@ -24,6 +24,7 @@ import com.hirehub.repository.ApplicationRepository;
 import com.hirehub.repository.ApplicationStatusHistoryRepository;
 import com.hirehub.repository.JobRepository;
 import com.hirehub.repository.UserRepository;
+import com.hirehub.util.EmailTemplateUtil;
 
 @Service
 public class ApplicationService {
@@ -34,6 +35,7 @@ public class ApplicationService {
     private final JobService jobService;
     private final JobRepository jobRepository;
     private final NotificationService notificationService;
+    private final EmailService emailService;
 
     public ApplicationService(
             ApplicationRepository applicationRepository,
@@ -41,7 +43,8 @@ public class ApplicationService {
             UserRepository userRepository,
             JobService jobService,
             JobRepository jobRepository,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            EmailService emailService) {
 
         this.applicationRepository = applicationRepository;
         this.historyRepository = historyRepository;
@@ -49,6 +52,7 @@ public class ApplicationService {
         this.jobService = jobService;
         this.jobRepository = jobRepository;
         this.notificationService = notificationService;
+        this.emailService = emailService;
     }
 
     // Record an application status history event
@@ -114,6 +118,19 @@ public class ApplicationService {
                         + job.getTitle(),
                 "APPLICATION");
 
+        // Send application confirmation email
+        String htmlBody = EmailTemplateUtil.applicationConfirmation(
+                candidate.getName(),
+                job.getTitle(),
+                job.getCompanyName()
+        );
+
+        emailService.sendHtmlEmail(
+                candidate.getEmail(),
+                "Application Confirmation - " + job.getTitle(),
+                htmlBody
+        );
+
         return savedApplication;
     }
 
@@ -162,6 +179,20 @@ public class ApplicationService {
                             + " has been updated to "
                             + newStatus,
                     "STATUS_UPDATE");
+
+            // Send application status update email
+            String htmlBody = EmailTemplateUtil.applicationStatusUpdate(
+                    application.getCandidate().getName(),
+                    application.getJob().getTitle(),
+                    newStatus.name()
+            );
+
+            emailService.sendHtmlEmail(
+                    application.getCandidate().getEmail(),
+                    "Application Status Update - "
+                            + application.getJob().getTitle(),
+                    htmlBody
+            );
 
             return updatedApplication;
         }
