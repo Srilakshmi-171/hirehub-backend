@@ -183,35 +183,61 @@ public class InterviewService {
                 .toList();
     }
 
-    // Convert entity into response DTO
-    private InterviewResponse convertToResponse(Interview interview) {
 
-        InterviewResponse response = new InterviewResponse();
+ // Convert entity into response DTO
+ private InterviewResponse convertToResponse(Interview interview) {
 
-        response.setId(interview.getId());
-        response.setApplicationId(
-                interview.getApplication().getId());
-        response.setCandidateName(
-                interview.getApplication().getCandidate().getName());
-        response.setRoundNumber(interview.getRoundNumber());
-        response.setInterviewTitle(interview.getInterviewTitle());
-        response.setScheduledAt(interview.getScheduledAt());
-        response.setMode(interview.getMode());
-        response.setMeetingLink(interview.getMeetingLink());
-        response.setVenueName(interview.getVenueName());
-        response.setVenueAddress(interview.getVenueAddress());
-        response.setInstructions(interview.getInstructions());
-        response.setStatus(interview.getStatus());
-        response.setResult(interview.getResult());
-        response.setCreatedAt(interview.getCreatedAt());
-        response.setUpdatedAt(interview.getUpdatedAt());
-        response.setRequestedNewTime(interview.getRequestedNewTime());
-        response.setRescheduleReason(interview.getRescheduleReason());
+     InterviewResponse response = new InterviewResponse();
 
-        // Recruiter feedback is intentionally not exposed here.
+     response.setId(interview.getId());
 
-        return response;
-    }
+     response.setApplicationId(
+             interview.getApplication().getId());
+
+     response.setCandidateName(
+             interview.getApplication().getCandidate().getName());
+
+     // Recruiter details
+     User recruiter = interview.getApplication()
+             .getJob()
+             .getRecruiter();
+
+     response.setRecruiterId(recruiter.getId());
+     response.setRecruiterName(recruiter.getName());
+     response.setRecruiterEmail(recruiter.getEmail());
+
+     response.setRoundNumber(interview.getRoundNumber());
+
+     response.setInterviewTitle(interview.getInterviewTitle());
+
+     response.setScheduledAt(interview.getScheduledAt());
+
+     response.setMode(interview.getMode());
+
+     response.setMeetingLink(interview.getMeetingLink());
+
+     response.setVenueName(interview.getVenueName());
+
+     response.setVenueAddress(interview.getVenueAddress());
+
+     response.setInstructions(interview.getInstructions());
+
+     response.setStatus(interview.getStatus());
+
+     response.setResult(interview.getResult());
+
+     response.setCreatedAt(interview.getCreatedAt());
+
+     response.setUpdatedAt(interview.getUpdatedAt());
+
+     response.setRequestedNewTime(interview.getRequestedNewTime());
+
+     response.setRescheduleReason(interview.getRescheduleReason());
+
+     // Recruiter feedback is intentionally not exposed here.
+
+     return response;
+ }
 
     // Candidate accepts or rejects an interview
     @Transactional

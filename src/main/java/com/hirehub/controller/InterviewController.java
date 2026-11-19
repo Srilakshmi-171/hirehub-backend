@@ -18,9 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.hirehub.dto.InterviewResponseRequest;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/api/applications")
@@ -66,23 +63,5 @@ public class InterviewController {
                         userId);
 
         return ResponseEntity.ok(interviews);
-    }
-    
- // Candidate accepts or rejects an interview
-    @PatchMapping("/api/interviews/{interviewId}/response")
-    public ResponseEntity<InterviewResponse> respondToInterview(
-            @PathVariable Long interviewId,
-            @Valid @RequestBody InterviewResponseRequest request,
-            Authentication authentication) {
-
-        Long candidateId = (Long) authentication.getPrincipal();
-
-        InterviewResponse response =
-                interviewService.respondToInterview(
-                        interviewId,
-                        candidateId,
-                        request.getResponse());
-
-        return ResponseEntity.ok(response);
     }
 }
