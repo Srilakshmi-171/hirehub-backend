@@ -111,4 +111,19 @@ public class InterviewResponseController {
                         interviewId, recruiterId)
         );
     }
+    
+	
+	@GetMapping("/{interviewId}/candidate-feedback")
+	public ResponseEntity<InterviewFeedbackResponse> getCandidateInterviewFeedback(
+	        @PathVariable Long interviewId,
+	        Authentication authentication) {
+	
+	    Long candidateId = (Long) authentication.getPrincipal();
+	
+	    return ResponseEntity.ok(
+	            interviewService.getCandidateInterviewFeedback(
+	                    interviewId, candidateId)
+	    );
+	}
+
 }

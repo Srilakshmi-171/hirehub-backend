@@ -519,4 +519,47 @@ public class InterviewService {
 
         return response;
     }
+	    
+	
+	@Transactional(readOnly = true)
+	public InterviewFeedbackResponse getCandidateInterviewFeedback(
+	        Long interviewId, Long candidateId) {
+	
+	    Interview interview = interviewRepository.findById(interviewId)
+	            .orElseThrow(() -> new ResponseStatusException(
+	                    HttpStatus.NOT_FOUND, "Interview not found"));
+	
+	    // Verify candidate ownership
+	    Long ownerId = interview.getApplication()
+	            .getCandidate()
+	            .getId();
+	
+	    if (!ownerId.equals(candidateId)) {
+	        throw new AccessDeniedException(
+	                "You are not authorized to view this interview feedback");
+	    }
+	
+	    // Feedback is visible only after interview completion
+	    if (interview.getStatus() != InterviewStatus.COMPLETED) {
+	        throw new ResponseStatusException(
+	                HttpStatus.BAD_REQUEST,
+	                "Interview feedback is not available until the interview is completed");
+	    }
+	
+	    // Build response
+	    InterviewFeedbackResponse response =
+	            new InterviewFeedbackResponse();
+	
+	    response.setInterviewId(interview.getId());
+	    response.setApplicationId(
+	            interview.getApplication().getId());
+	    response.setInterviewTitle(interview.getInterviewTitle());
+	    response.setRecruiterFeedback(
+	            interview.getRecruiterFeedback());
+	    response.setResult(interview.getResult());
+	    response.setStatus(interview.getStatus());
+	
+	    return response;
+	}
+
 }
