@@ -4,6 +4,8 @@ package com.hirehub.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.Check;
+
 @Entity
 @Table(
     name = "interviews",
@@ -14,6 +16,7 @@ import java.time.LocalDateTime;
         )
     }
 )
+@Check(constraints = "round_number >= 1")
 public class Interview {
 
     @Id
@@ -60,39 +63,17 @@ public class Interview {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
-    
+
     private LocalDateTime requestedNewTime;
 
     @Column(length = 1000)
     private String rescheduleReason;
-    
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status_before_reschedule")
     private InterviewStatus statusBeforeReschedule;
 
-    public String getRescheduleReason() {
-		return rescheduleReason;
-	}
-
-	public void setRescheduleReason(String rescheduleReason) {
-		this.rescheduleReason = rescheduleReason;
-	}
-
-	public void setCreatedAt(LocalDateTime createdAt) {
-		this.createdAt = createdAt;
-	}
-
-	public LocalDateTime getRequestedNewTime() {
-		return requestedNewTime;
-	}
-
-	public void setRequestedNewTime(LocalDateTime requestedNewTime) {
-		this.requestedNewTime = requestedNewTime;
-	}
-
-	public void setUpdatedAt(LocalDateTime updatedAt) {
-		this.updatedAt = updatedAt;
-	}
-
-	public Interview() {
+    public Interview() {
     }
 
     @PrePersist
@@ -110,8 +91,6 @@ public class Interview {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    // Getters and setters
 
     public Long getId() {
         return id;
@@ -224,12 +203,37 @@ public class Interview {
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
-    
+
+    public LocalDateTime getRequestedNewTime() {
+        return requestedNewTime;
+    }
+
+    public void setRequestedNewTime(LocalDateTime requestedNewTime) {
+        this.requestedNewTime = requestedNewTime;
+    }
+
+    public String getRescheduleReason() {
+        return rescheduleReason;
+    }
+
+    public void setRescheduleReason(String rescheduleReason) {
+        this.rescheduleReason = rescheduleReason;
+    }
+
     public InterviewStatus getStatusBeforeReschedule() {
         return statusBeforeReschedule;
     }
 
-    public void setStatusBeforeReschedule(InterviewStatus statusBeforeReschedule) {
+    public void setStatusBeforeReschedule(
+            InterviewStatus statusBeforeReschedule) {
         this.statusBeforeReschedule = statusBeforeReschedule;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

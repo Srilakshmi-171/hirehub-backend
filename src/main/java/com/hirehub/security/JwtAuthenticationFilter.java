@@ -29,6 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public JwtAuthenticationFilter(
             JwtService jwtService,
             UserRepository userRepository) {
+
         this.jwtService = jwtService;
         this.userRepository = userRepository;
     }
@@ -42,7 +43,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // No Bearer token: let Spring Security handle authorization.
+        // No Bearer token: continue to Spring Security.
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -50,48 +51,55 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String jwtToken = authHeader.substring(7);
 
+        Long userId;
+
+        // Validate token and extract user ID.
         try {
-            // Validate the token and extract the user ID.
-            Long userId = jwtService.extractUserId(jwtToken);
-
-
-            // Find the user in the database.
-            Optional<User> userOptional = userRepository.findById(userId);
-
-            if (userOptional.isEmpty()) {
-                response.sendError(
-                        HttpServletResponse.SC_UNAUTHORIZED,
-                        "Invalid or expired token");
-                return;
-            }
-
-            User user = userOptional.get();
-
-            // Build the user's authority from the database role.
-            var authorities = List.of(
-                    new SimpleGrantedAuthority("ROLE_" + user.getRole()));
-
-            // Create an authenticated Spring Security object.
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            user.getId(),
-                            null,
-                            authorities);
-
-            // Store authentication for this request.
-            SecurityContextHolder.getContext()
-                    .setAuthentication(authentication);
-
-
-            filterChain.doFilter(request, response);
+            userId = jwtService.extractUserId(jwtToken);
 
         } catch (JwtException | IllegalArgumentException exception) {
-            SecurityContextHolder.clearContext();
 
+            SecurityContextHolder.clearContext();
 
             response.sendError(
                     HttpServletResponse.SC_UNAUTHORIZED,
                     "Invalid or expired token");
+
+            return;
         }
+
+        // Check whether the user still exists.
+        Optional<User> userOptional = userRepository.findById(userId);
+
+        if (userOptional.isEmpty()) {
+
+            SecurityContextHolder.clearContext();
+
+            response.sendError(
+                    HttpServletResponse.SC_UNAUTHORIZED,
+                    "Invalid or expired token");
+
+            return;
+        }
+
+        User user = userOptional.get();
+
+        // Load role from database.
+        var authorities = List.of(
+                new SimpleGrantedAuthority(
+                        "ROLE_" + user.getRole()));
+
+        // Create authenticated principal.
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(
+                        user.getId(),
+                        null,
+                        authorities);
+
+        SecurityContextHolder.getContext()
+                .setAuthentication(authentication);
+
+        // Continue filter chain outside JWT exception handling.
+        filterChain.doFilter(request, response);
     }
 }

@@ -12,9 +12,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.DispatcherType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Configuration
 public class SecurityConfig {
+	
+	private static final Logger logger =
+	        LoggerFactory.getLogger(SecurityConfig.class);
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -44,18 +49,17 @@ public class SecurityConfig {
                     );
                 })
                 .accessDeniedHandler((request, response, exception) -> {
-                    System.out.println(
-                        "ACCESS DENIED: " + request.getMethod()
-                        + " " + request.getRequestURI()
-                    );
 
-                    System.out.println(
-                        "Exception: " + exception.getClass().getName()
+                    logger.warn(
+                            "Access denied: {} {} | Exception: {}",
+                            request.getMethod(),
+                            request.getRequestURI(),
+                            exception.getClass().getSimpleName()
                     );
 
                     response.sendError(
-                        HttpServletResponse.SC_FORBIDDEN,
-                        "Access denied"
+                            HttpServletResponse.SC_FORBIDDEN,
+                            "Access denied"
                     );
                 })
             )
@@ -80,7 +84,7 @@ public class SecurityConfig {
                 // Only candidates can apply for jobs
                 .requestMatchers(
                     HttpMethod.POST,
-                    "/api/jobs/*/apply"
+                    "/api/applications/*/apply"
                 ).hasRole("CANDIDATE")
 
                 // Only recruiters can update jobs
@@ -90,7 +94,7 @@ public class SecurityConfig {
                 ).hasRole("RECRUITER")
 
                 // Only candidates can remove saved jobs
-                // IMPORTANT: Must be before the general DELETE rule
+                // Must be before the general DELETE rule
                 .requestMatchers(
                     HttpMethod.DELETE,
                     "/api/jobs/*/save"
@@ -103,8 +107,16 @@ public class SecurityConfig {
                 ).hasRole("RECRUITER")
 
                 // Only recruiters can update application statuses
+                // PATCH endpoints
                 .requestMatchers(
                     HttpMethod.PATCH,
+                    "/api/applications/**"
+                ).hasRole("RECRUITER")
+
+                // Only recruiters can update application statuses
+                // PUT endpoint used by ApplicationController
+                .requestMatchers(
+                    HttpMethod.PUT,
                     "/api/applications/**"
                 ).hasRole("RECRUITER")
 
@@ -131,26 +143,24 @@ public class SecurityConfig {
                     HttpMethod.PATCH,
                     "/api/candidates/me"
                 ).hasRole("CANDIDATE")
-                
-	
-	             // Candidate preference management
-	             .requestMatchers(
-	                 HttpMethod.POST,
-	                 "/api/candidates/me/preferences"
-	             ).hasRole("CANDIDATE")
-	
-	             .requestMatchers(
-	                 HttpMethod.GET,
-	                 "/api/candidates/me/preferences"
-	             ).hasRole("CANDIDATE")
-	
-	             .requestMatchers(
-	                 HttpMethod.PUT,
-	                 "/api/candidates/me/preferences"
-	             ).hasRole("CANDIDATE")
 
-                
-             // Candidate resume management
+                // Candidate preference management
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/api/candidates/me/preferences"
+                ).hasRole("CANDIDATE")
+
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/candidates/me/preferences"
+                ).hasRole("CANDIDATE")
+
+                .requestMatchers(
+                    HttpMethod.PUT,
+                    "/api/candidates/me/preferences"
+                ).hasRole("CANDIDATE")
+
+                // Candidate resume management
                 .requestMatchers(
                     HttpMethod.POST,
                     "/api/candidates/me/resume"
@@ -166,66 +176,93 @@ public class SecurityConfig {
                     HttpMethod.DELETE,
                     "/api/candidates/me/resume"
                 ).hasRole("CANDIDATE")
-                
+
+                // Recruiters can view candidate resumes
                 .requestMatchers(
-                	    HttpMethod.GET,
-                	    "/api/applications/*/resume"
-                	).hasRole("RECRUITER")
-                
-             // Only recruiters can schedule interviews
+                    HttpMethod.GET,
+                    "/api/applications/*/resume"
+                ).hasRole("RECRUITER")
+
+                // Only recruiters can schedule interviews
                 .requestMatchers(
                     HttpMethod.POST,
                     "/api/applications/*/interviews"
                 ).hasRole("RECRUITER")
 
-                // Candidates and recruiters must be authenticated to view interviews
+                // Candidates and recruiters can view interviews
                 .requestMatchers(
                     HttpMethod.GET,
                     "/api/applications/*/interviews"
                 ).hasAnyRole("CANDIDATE", "RECRUITER")
-                
+
+                // Only candidates can respond to interviews
                 .requestMatchers(
-                	    HttpMethod.PATCH,
-                	    "/api/interviews/*/response"
-                	).hasRole("CANDIDATE")
-                
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                
-                .requestMatchers(HttpMethod.PATCH, "/api/interviews/*/reschedule")
-                .hasRole("CANDIDATE")
-                
-                .requestMatchers(HttpMethod.PATCH,
-                        "/api/interviews/*/reschedule-decision")
-                .hasRole("RECRUITER")
-                        
-                .requestMatchers(HttpMethod.PATCH, "/api/interviews/*/cancel")
-                .hasRole("RECRUITER")
-                
-                .requestMatchers(HttpMethod.PATCH, "/api/interviews/*/complete")
-                .hasRole("RECRUITER")
-                
-                .requestMatchers(HttpMethod.GET, "/api/interviews/*/feedback")
-                .hasRole("RECRUITER")
-                
-             // Only candidates can view job recommendations
+                    HttpMethod.PATCH,
+                    "/api/interviews/*/response"
+                ).hasRole("CANDIDATE")
+
+                // Admin endpoints
+                .requestMatchers(
+                    "/api/admin/**"
+                ).hasRole("ADMIN")
+
+                // Interview rescheduling
+                .requestMatchers(
+                    HttpMethod.PATCH,
+                    "/api/interviews/*/reschedule"
+                ).hasRole("CANDIDATE")
+
+                .requestMatchers(
+                    HttpMethod.PATCH,
+                    "/api/interviews/*/reschedule-decision"
+                ).hasRole("RECRUITER")
+
+                // Only recruiters can cancel interviews
+                .requestMatchers(
+                    HttpMethod.PATCH,
+                    "/api/interviews/*/cancel"
+                ).hasRole("RECRUITER")
+
+                // Only recruiters can complete interviews
+                .requestMatchers(
+                    HttpMethod.PATCH,
+                    "/api/interviews/*/complete"
+                ).hasRole("RECRUITER")
+
+                // Only recruiters can view interview feedback
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/interviews/*/feedback"
+                ).hasRole("RECRUITER")
+
+                // Only candidates can view their interview feedback
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/interviews/*/candidate-feedback"
+                ).hasRole("CANDIDATE")
+
+                // Only candidates can view job recommendations
                 .requestMatchers(
                     HttpMethod.GET,
                     "/api/candidates/me/recommendations"
                 ).hasRole("CANDIDATE")
-                
+
+                // Candidate saved searches
                 .requestMatchers(
-                	    "/api/candidates/me/saved-searches",
-                	    "/api/candidates/me/saved-searches/**"
-                	).hasRole("CANDIDATE")
-                
-             // Recruiter analytics
+                    "/api/candidates/me/saved-searches",
+                    "/api/candidates/me/saved-searches/**"
+                ).hasRole("CANDIDATE")
+
+                // Recruiter analytics
                 .requestMatchers(
                     HttpMethod.GET,
                     "/api/recruiter/analytics"
                 ).hasRole("RECRUITER")
-                
-                .requestMatchers("/api/recruiter/reports/**")
-                .hasRole("RECRUITER")
+
+                // Recruiter reports
+                .requestMatchers(
+                    "/api/recruiter/reports/**"
+                ).hasRole("RECRUITER")
 
                 // All remaining endpoints require authentication
                 .anyRequest().authenticated()

@@ -5,9 +5,11 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.hirehub.dto.ApplicationResponse;
 import com.hirehub.entity.Application;
@@ -134,6 +136,34 @@ public class ApplicationService {
         return savedApplication;
     }
 
+    // Validate allowed application status transitions
+    private boolean isAllowedStatusTransition(
+            ApplicationStatus currentStatus,
+            ApplicationStatus newStatus) {
+
+        if (currentStatus == null || newStatus == null) {
+            return false;
+        }
+
+        return switch (currentStatus) {
+
+            case APPLIED ->
+                    newStatus == ApplicationStatus.SHORTLISTED
+                    || newStatus == ApplicationStatus.INTERVIEW
+                    || newStatus == ApplicationStatus.REJECTED;
+
+            case SHORTLISTED ->
+                    newStatus == ApplicationStatus.INTERVIEW
+                    || newStatus == ApplicationStatus.REJECTED;
+
+            case INTERVIEW ->
+                    newStatus == ApplicationStatus.SELECTED
+                    || newStatus == ApplicationStatus.REJECTED;
+
+            case SELECTED, REJECTED, WITHDRAWN -> false;
+        };
+    }
+
     // Recruiter updates application status
     @Transactional
     public Application updateApplicationStatus(
@@ -155,49 +185,63 @@ public class ApplicationService {
                     "You do not own this job");
         }
 
-        ApplicationStatus oldStatus = application.getStatus();
-
-        if (oldStatus != newStatus) {
-
-            application.setStatus(newStatus);
-
-            Application updatedApplication =
-                    applicationRepository.save(application);
-
-            // Record status change history
-            recordStatusHistory(
-                    updatedApplication,
-                    oldStatus,
-                    newStatus,
-                    application.getJob().getRecruiter(),
-                    "Recruiter updated application status");
-
-            notificationService.createNotification(
-                    application.getCandidate(),
-                    "Your application for "
-                            + application.getJob().getTitle()
-                            + " has been updated to "
-                            + newStatus,
-                    "STATUS_UPDATE");
-
-            // Send application status update email
-            String htmlBody = EmailTemplateUtil.applicationStatusUpdate(
-                    application.getCandidate().getName(),
-                    application.getJob().getTitle(),
-                    newStatus.name()
-            );
-
-            emailService.sendHtmlEmail(
-                    application.getCandidate().getEmail(),
-                    "Application Status Update - "
-                            + application.getJob().getTitle(),
-                    htmlBody
-            );
-
-            return updatedApplication;
+        if (newStatus == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Application status is required");
         }
 
-        return application;
+        ApplicationStatus oldStatus = application.getStatus();
+
+        // Avoid duplicate updates and notifications
+        if (oldStatus == newStatus) {
+            return application;
+        }
+
+        // Validate the requested transition
+        if (!isAllowedStatusTransition(oldStatus, newStatus)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid application status transition: "
+                            + oldStatus + " -> " + newStatus);
+        }
+
+        application.setStatus(newStatus);
+
+        Application updatedApplication =
+                applicationRepository.save(application);
+
+        // Record status change history
+        recordStatusHistory(
+                updatedApplication,
+                oldStatus,
+                newStatus,
+                application.getJob().getRecruiter(),
+                "Recruiter updated application status");
+
+        notificationService.createNotification(
+                application.getCandidate(),
+                "Your application for "
+                        + application.getJob().getTitle()
+                        + " has been updated to "
+                        + newStatus,
+                "STATUS_UPDATE");
+
+        // Send application status update email
+        String htmlBody = EmailTemplateUtil.applicationStatusUpdate(
+                application.getCandidate().getName(),
+                application.getJob().getTitle(),
+                newStatus.name()
+        );
+
+        emailService.sendHtmlEmail(
+                application.getCandidate().getEmail(),
+                "Application Status Update - "
+                        + application.getJob().getTitle(),
+                htmlBody
+        );
+
+        return updatedApplication;
     }
 
     // Candidate views their applications
@@ -342,4 +386,81 @@ public class ApplicationService {
 
         return counts;
     }
+    
+
+    // Automatically move an application to INTERVIEW when an interview is scheduled
+    @Transactional
+    public Application markApplicationAsInterview(
+            Long applicationId,
+            Long recruiterId) {
+
+        Application application = applicationRepository
+                .findById(applicationId)
+                .orElseThrow(() -> new ApplicationNotFoundException(
+                        "Application not found with ID: " + applicationId));
+
+        Long ownerId = application.getJob()
+                .getRecruiter()
+                .getId();
+
+        if (!ownerId.equals(recruiterId)) {
+            throw new AccessDeniedException(
+                    "You do not own this job");
+        }
+
+        ApplicationStatus oldStatus = application.getStatus();
+
+        // Already in the interview stage: no duplicate history or notifications
+        if (oldStatus == ApplicationStatus.INTERVIEW) {
+            return application;
+        }
+
+        // Only APPLIED and SHORTLISTED applications can enter INTERVIEW
+        if (!isAllowedStatusTransition(
+                oldStatus, ApplicationStatus.INTERVIEW)) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Application cannot move to INTERVIEW from "
+                            + oldStatus);
+        }
+
+        application.setStatus(ApplicationStatus.INTERVIEW);
+
+        Application updatedApplication =
+                applicationRepository.save(application);
+
+        // Record status history
+        recordStatusHistory(
+                updatedApplication,
+                oldStatus,
+                ApplicationStatus.INTERVIEW,
+                application.getJob().getRecruiter(),
+                "Application moved to INTERVIEW because an interview was scheduled");
+
+        // Notify candidate
+        notificationService.createNotification(
+                application.getCandidate(),
+                "Your application for "
+                        + application.getJob().getTitle()
+                        + " has moved to INTERVIEW",
+                "STATUS_UPDATE");
+
+        // Send status update email
+        String htmlBody = EmailTemplateUtil.applicationStatusUpdate(
+                application.getCandidate().getName(),
+                application.getJob().getTitle(),
+                ApplicationStatus.INTERVIEW.name()
+        );
+
+        emailService.sendHtmlEmail(
+                application.getCandidate().getEmail(),
+                "Application Status Update - "
+                        + application.getJob().getTitle(),
+                htmlBody
+        );
+
+        return updatedApplication;
+    }
+
 }

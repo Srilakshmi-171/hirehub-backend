@@ -1,6 +1,7 @@
 
 package com.hirehub.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -35,19 +36,22 @@ public class InterviewService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final EmailService emailService;
+    private final ApplicationService applicationService;
 
     public InterviewService(
             InterviewRepository interviewRepository,
             ApplicationRepository applicationRepository,
             UserRepository userRepository,
             NotificationService notificationService,
-            EmailService emailService) {
+            EmailService emailService,
+            ApplicationService applicationService) {
 
         this.interviewRepository = interviewRepository;
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
         this.emailService = emailService;
+        this.applicationService = applicationService;
     }
 
     // Recruiter schedules an interview
@@ -74,11 +78,12 @@ public class InterviewService {
         ApplicationStatus applicationStatus = application.getStatus();
 
         if (applicationStatus != ApplicationStatus.APPLIED
-                && applicationStatus != ApplicationStatus.SHORTLISTED) {
+                && applicationStatus != ApplicationStatus.SHORTLISTED
+                && applicationStatus != ApplicationStatus.INTERVIEW) {
 
             throw new IllegalStateException(
-                    "Interviews can only be scheduled for APPLIED "
-                    + "or SHORTLISTED applications");
+                    "Interviews can only be scheduled for APPLIED, "
+                    + "SHORTLISTED, or INTERVIEW applications");
         }
 
         if (interviewRepository.existsByApplicationIdAndRoundNumber(
@@ -89,6 +94,11 @@ public class InterviewService {
         }
 
         // Validate interview mode
+        if (request.getMode() == null) {
+            throw new IllegalArgumentException(
+                    "Interview mode is required");
+        }
+
         if (request.getMode() == InterviewMode.ONLINE) {
 
             if (request.getMeetingLink() == null
@@ -123,6 +133,10 @@ public class InterviewService {
         interview.setVenueAddress(request.getVenueAddress());
         interview.setInstructions(request.getInstructions());
 
+        // Move application to INTERVIEW before saving the interview
+        applicationService.markApplicationAsInterview(
+                applicationId, recruiterId);
+
         Interview savedInterview = interviewRepository.save(interview);
 
         notificationService.createNotification(
@@ -133,7 +147,6 @@ public class InterviewService {
                         + "for " + application.getJob().getTitle(),
                 "INTERVIEW");
 
-        // Send interview scheduled email
         String htmlBody = EmailTemplateUtil.interviewScheduled(
                 application.getCandidate().getName(),
                 application.getJob().getTitle(),
@@ -183,61 +196,41 @@ public class InterviewService {
                 .toList();
     }
 
+    // Convert entity into response DTO
+    private InterviewResponse convertToResponse(Interview interview) {
 
- // Convert entity into response DTO
- private InterviewResponse convertToResponse(Interview interview) {
+        InterviewResponse response = new InterviewResponse();
 
-     InterviewResponse response = new InterviewResponse();
+        response.setId(interview.getId());
+        response.setApplicationId(interview.getApplication().getId());
+        response.setCandidateName(
+                interview.getApplication().getCandidate().getName());
 
-     response.setId(interview.getId());
+        User recruiter = interview.getApplication()
+                .getJob()
+                .getRecruiter();
 
-     response.setApplicationId(
-             interview.getApplication().getId());
+        response.setRecruiterId(recruiter.getId());
+        response.setRecruiterName(recruiter.getName());
+        response.setRecruiterEmail(recruiter.getEmail());
 
-     response.setCandidateName(
-             interview.getApplication().getCandidate().getName());
+        response.setRoundNumber(interview.getRoundNumber());
+        response.setInterviewTitle(interview.getInterviewTitle());
+        response.setScheduledAt(interview.getScheduledAt());
+        response.setMode(interview.getMode());
+        response.setMeetingLink(interview.getMeetingLink());
+        response.setVenueName(interview.getVenueName());
+        response.setVenueAddress(interview.getVenueAddress());
+        response.setInstructions(interview.getInstructions());
+        response.setStatus(interview.getStatus());
+        response.setResult(interview.getResult());
+        response.setCreatedAt(interview.getCreatedAt());
+        response.setUpdatedAt(interview.getUpdatedAt());
+        response.setRequestedNewTime(interview.getRequestedNewTime());
+        response.setRescheduleReason(interview.getRescheduleReason());
 
-     // Recruiter details
-     User recruiter = interview.getApplication()
-             .getJob()
-             .getRecruiter();
-
-     response.setRecruiterId(recruiter.getId());
-     response.setRecruiterName(recruiter.getName());
-     response.setRecruiterEmail(recruiter.getEmail());
-
-     response.setRoundNumber(interview.getRoundNumber());
-
-     response.setInterviewTitle(interview.getInterviewTitle());
-
-     response.setScheduledAt(interview.getScheduledAt());
-
-     response.setMode(interview.getMode());
-
-     response.setMeetingLink(interview.getMeetingLink());
-
-     response.setVenueName(interview.getVenueName());
-
-     response.setVenueAddress(interview.getVenueAddress());
-
-     response.setInstructions(interview.getInstructions());
-
-     response.setStatus(interview.getStatus());
-
-     response.setResult(interview.getResult());
-
-     response.setCreatedAt(interview.getCreatedAt());
-
-     response.setUpdatedAt(interview.getUpdatedAt());
-
-     response.setRequestedNewTime(interview.getRequestedNewTime());
-
-     response.setRescheduleReason(interview.getRescheduleReason());
-
-     // Recruiter feedback is intentionally not exposed here.
-
-     return response;
- }
+        return response;
+    }
 
     // Candidate accepts or rejects an interview
     @Transactional
@@ -319,9 +312,7 @@ public class InterviewService {
                     "Rescheduling cannot be requested in the current interview status");
         }
 
-        // FIX 1: Save the previous status before changing it
         interview.setStatusBeforeReschedule(interview.getStatus());
-
         interview.setRequestedNewTime(request.getRequestedNewTime());
         interview.setRescheduleReason(request.getRescheduleReason());
         interview.setStatus(InterviewStatus.RESCHEDULE_REQUESTED);
@@ -371,10 +362,17 @@ public class InterviewService {
 
         User candidate = interview.getApplication().getCandidate();
 
+        InterviewStatus previousStatus =
+                interview.getStatusBeforeReschedule();
+
+        if (previousStatus == null) {
+            previousStatus = InterviewStatus.SCHEDULED;
+        }
+
         if (Boolean.TRUE.equals(request.getApproved())) {
 
             interview.setScheduledAt(interview.getRequestedNewTime());
-            interview.setStatus(InterviewStatus.SCHEDULED);
+            interview.setStatus(previousStatus);
 
             notificationService.createNotification(
                     candidate,
@@ -386,14 +384,6 @@ public class InterviewService {
 
         } else {
 
-            // FIX 2: Handle older requests with a null previous status
-            InterviewStatus previousStatus =
-                    interview.getStatusBeforeReschedule();
-
-            if (previousStatus == null) {
-                previousStatus = InterviewStatus.SCHEDULED;
-            }
-
             interview.setStatus(previousStatus);
 
             notificationService.createNotification(
@@ -404,7 +394,6 @@ public class InterviewService {
                     "INTERVIEW");
         }
 
-        // Clear pending rescheduling information
         interview.setRequestedNewTime(null);
         interview.setRescheduleReason(null);
         interview.setStatusBeforeReschedule(null);
@@ -414,8 +403,10 @@ public class InterviewService {
         return convertToResponse(updatedInterview);
     }
 
+    // Recruiter cancels an interview
     @Transactional
-    public InterviewResponse cancelInterview(Long interviewId, Long recruiterId) {
+    public InterviewResponse cancelInterview(
+            Long interviewId, Long recruiterId) {
 
         Interview interview = interviewRepository.findById(interviewId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -423,12 +414,14 @@ public class InterviewService {
 
         if (!interview.getApplication().getJob()
                 .getRecruiter().getId().equals(recruiterId)) {
+
             throw new AccessDeniedException(
                     "You are not authorized to cancel this interview");
         }
 
         if (interview.getStatus() == InterviewStatus.CANCELLED
                 || interview.getStatus() == InterviewStatus.COMPLETED) {
+
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Cancelled or completed interviews cannot be cancelled");
@@ -444,12 +437,12 @@ public class InterviewService {
                 candidate,
                 "Your interview " + interview.getInterviewTitle()
                         + " has been cancelled by the recruiter.",
-                "INTERVIEW"
-        );
+                "INTERVIEW");
 
         return convertToResponse(interview);
     }
 
+    // Recruiter completes an interview
     @Transactional
     public InterviewResponse completeInterview(
             Long interviewId,
@@ -462,15 +455,23 @@ public class InterviewService {
 
         if (!interview.getApplication().getJob()
                 .getRecruiter().getId().equals(recruiterId)) {
+
             throw new AccessDeniedException(
                     "You are not authorized to complete this interview");
         }
 
-        if (interview.getStatus() == InterviewStatus.CANCELLED
-                || interview.getStatus() == InterviewStatus.COMPLETED) {
+        if (interview.getStatus() != InterviewStatus.ACCEPTED) {
+
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Cancelled or already completed interviews cannot be completed");
+                    "Only accepted interviews can be completed");
+        }
+
+        if (interview.getScheduledAt().isAfter(LocalDateTime.now())) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "An interview cannot be completed before its scheduled time");
         }
 
         interview.setStatus(InterviewStatus.COMPLETED);
@@ -485,12 +486,12 @@ public class InterviewService {
                 candidate,
                 "Your " + interview.getInterviewTitle()
                         + " interview outcome is " + request.getResult(),
-                "INTERVIEW"
-        );
+                "INTERVIEW");
 
         return convertToResponse(interview);
     }
 
+    // Recruiter views interview feedback
     @Transactional(readOnly = true)
     public InterviewFeedbackResponse getInterviewFeedback(
             Long interviewId, Long recruiterId) {
@@ -501,6 +502,7 @@ public class InterviewService {
 
         if (!interview.getApplication().getJob()
                 .getRecruiter().getId().equals(recruiterId)) {
+
             throw new AccessDeniedException(
                     "You are not authorized to view this interview feedback");
         }
@@ -519,47 +521,44 @@ public class InterviewService {
 
         return response;
     }
-	    
-	
-	@Transactional(readOnly = true)
-	public InterviewFeedbackResponse getCandidateInterviewFeedback(
-	        Long interviewId, Long candidateId) {
-	
-	    Interview interview = interviewRepository.findById(interviewId)
-	            .orElseThrow(() -> new ResponseStatusException(
-	                    HttpStatus.NOT_FOUND, "Interview not found"));
-	
-	    // Verify candidate ownership
-	    Long ownerId = interview.getApplication()
-	            .getCandidate()
-	            .getId();
-	
-	    if (!ownerId.equals(candidateId)) {
-	        throw new AccessDeniedException(
-	                "You are not authorized to view this interview feedback");
-	    }
-	
-	    // Feedback is visible only after interview completion
-	    if (interview.getStatus() != InterviewStatus.COMPLETED) {
-	        throw new ResponseStatusException(
-	                HttpStatus.BAD_REQUEST,
-	                "Interview feedback is not available until the interview is completed");
-	    }
-	
-	    // Build response
-	    InterviewFeedbackResponse response =
-	            new InterviewFeedbackResponse();
-	
-	    response.setInterviewId(interview.getId());
-	    response.setApplicationId(
-	            interview.getApplication().getId());
-	    response.setInterviewTitle(interview.getInterviewTitle());
-	    response.setRecruiterFeedback(
-	            interview.getRecruiterFeedback());
-	    response.setResult(interview.getResult());
-	    response.setStatus(interview.getStatus());
-	
-	    return response;
-	}
 
+    // Candidate views completed interview feedback
+    @Transactional(readOnly = true)
+    public InterviewFeedbackResponse getCandidateInterviewFeedback(
+            Long interviewId, Long candidateId) {
+
+        Interview interview = interviewRepository.findById(interviewId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Interview not found"));
+
+        Long ownerId = interview.getApplication()
+                .getCandidate()
+                .getId();
+
+        if (!ownerId.equals(candidateId)) {
+            throw new AccessDeniedException(
+                    "You are not authorized to view this interview feedback");
+        }
+
+        if (interview.getStatus() != InterviewStatus.COMPLETED) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Interview feedback is not available until the interview is completed");
+        }
+
+        InterviewFeedbackResponse response =
+                new InterviewFeedbackResponse();
+
+        response.setInterviewId(interview.getId());
+        response.setApplicationId(
+                interview.getApplication().getId());
+        response.setInterviewTitle(interview.getInterviewTitle());
+        response.setRecruiterFeedback(
+                interview.getRecruiterFeedback());
+        response.setResult(interview.getResult());
+        response.setStatus(interview.getStatus());
+
+        return response;
+    }
 }

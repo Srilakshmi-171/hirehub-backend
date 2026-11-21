@@ -26,6 +26,7 @@ public class ApplicationStatusController {
         this.applicationService = applicationService;
     }
 
+    // Recruiter updates application status
     @PatchMapping("/{applicationId}/status")
     public ResponseEntity<String> updateApplicationStatus(
             @PathVariable Long applicationId,
