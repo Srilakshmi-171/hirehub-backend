@@ -4,6 +4,10 @@ package com.hirehub.service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Locale;
+import java.util.UUID;
+
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,13 +66,8 @@ public class CandidateResumeService {
                     resumeRepository.findByCandidateId(candidateId)
                     .orElseGet(CandidateResume::new);
 
-            String fileName = file.getOriginalFilename();
-
-            if (fileName != null) {
-                fileName = fileName.replace("\\", "/");
-                fileName = fileName.substring(
-                        fileName.lastIndexOf("/") + 1);
-            }
+            String fileName =
+                    "resume-" + UUID.randomUUID() + ".pdf";
 
             resume.setCandidate(candidate);
             resume.setFileName(fileName);
@@ -85,7 +84,6 @@ public class CandidateResumeService {
             throw new InvalidResumeException(
                     "Unable to read uploaded resume");
         }
-        
     }
 
     // Validate uploaded PDF
@@ -120,13 +118,14 @@ public class CandidateResumeService {
         try {
             byte[] data = file.getBytes();
 
-            if (data.length < 5 ||
-                    data[0] != '%' ||
-                    data[1] != 'P' ||
-                    data[2] != 'D' ||
-                    data[3] != 'F' ||
-                    data[4] != '-') {
+            try (PDDocument document = Loader.loadPDF(data)) {
 
+                if (document.getNumberOfPages() == 0) {
+                    throw new InvalidResumeException(
+                            "PDF must contain at least one page");
+                }
+
+            } catch (IOException ex) {
                 throw new InvalidResumeException(
                         "Uploaded file is not a valid PDF");
             }
@@ -186,16 +185,20 @@ public class CandidateResumeService {
 
         return response;
     }
-    
+
+    // Recruiter downloads candidate resume
     @Transactional(readOnly = true)
     public CandidateResume getResumeForRecruiter(
             Long applicationId, Long recruiterId) {
 
-        Application application = applicationRepository.findById(applicationId)
+        Application application =
+                applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ResumeNotFoundException(
                         "Application not found"));
 
-        if (!application.getJob().getRecruiter().getId().equals(recruiterId)) {
+        if (!application.getJob().getRecruiter()
+                .getId().equals(recruiterId)) {
+
             throw new ForbiddenAccessException(
                     "You are not authorized to access this candidate's resume");
         }

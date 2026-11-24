@@ -18,6 +18,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "jobs")
@@ -31,6 +32,7 @@ public class Job {
     private String title;
 
     @Column(nullable = false, length = 2000)
+    @Size(max = 2000, message = "Description cannot exceed 2000 characters")
     private String description;
 
     @Column(nullable = false)

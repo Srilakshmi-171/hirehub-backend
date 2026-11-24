@@ -1,10 +1,12 @@
 
 package com.hirehub.dto;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 
 import com.hirehub.entity.InterviewMode;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -102,5 +104,36 @@ public class ScheduleInterviewRequest {
 
     public void setInstructions(String instructions) {
         this.instructions = instructions;
+    }
+    @AssertTrue(message = "ONLINE interviews require a valid meeting link; OFFLINE interviews require venue name and address")
+    public boolean isInterviewDetailsValid() {
+
+        if (mode == null) {
+            return true;
+        }
+
+        if (mode == InterviewMode.ONLINE) {
+            if (meetingLink == null || meetingLink.isBlank()) {
+                return false;
+            }
+
+            try {
+                URI uri = URI.create(meetingLink.trim());
+
+                return ("http".equalsIgnoreCase(uri.getScheme())
+                        || "https".equalsIgnoreCase(uri.getScheme()))
+                        && uri.getHost() != null
+                        && uri.getHost().contains(".");
+            } catch (IllegalArgumentException ex) {
+                return false;
+            }
+        }
+
+        if (mode == InterviewMode.OFFLINE) {
+            return venueName != null && !venueName.isBlank()
+                    && venueAddress != null && !venueAddress.isBlank();
+        }
+
+        return true;
     }
 }

@@ -295,7 +295,8 @@ public class ApplicationService {
                 || currentStatus == ApplicationStatus.REJECTED
                 || currentStatus == ApplicationStatus.WITHDRAWN) {
 
-            throw new IllegalStateException(
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
                     "Application cannot be withdrawn in its current status");
         }
 

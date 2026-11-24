@@ -1,191 +1,340 @@
+
 package com.hirehub.exception;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import com.hirehub.exception.DuplicateEmailException;
-import org.springframework.security.access.AccessDeniedException;
-import java.util.*;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+import com.hirehub.dto.ApiErrorResponse;
+import org.springframework.web.server.ResponseStatusException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-	@ExceptionHandler(MethodArgumentNotValidException.class)
-	public ResponseEntity<?> handleValidationException(MethodArgumentNotValidException exception) {
-		HashMap<String, String> errors = new HashMap<>();
-		for (FieldError error : exception.getBindingResult().getFieldErrors()) {
+    private ResponseEntity<ApiErrorResponse> buildErrorResponse(
+            HttpStatus status,
+            String message,
+            WebRequest request,
+            Map<String, String> validationErrors) {
 
-			errors.put(error.getField(), error.getDefaultMessage());
+        String path = ((ServletWebRequest) request)
+                .getRequest()
+                .getRequestURI();
 
-		}
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
-	}
+        ApiErrorResponse response = new ApiErrorResponse(
+                LocalDateTime.now(),
+                status.value(),
+                status.getReasonPhrase(),
+                message,
+                path,
+                validationErrors
+        );
 
-	@ExceptionHandler(DuplicateEmailException.class)
-	public ResponseEntity<?> handleEmailException(DuplicateEmailException exception) {
+        return ResponseEntity.status(status).body(response);
+    }
 
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
-	}
-	
-	@ExceptionHandler(UserNotFoundException.class)
-	public ResponseEntity<?> handleUserNotFoundException(UserNotFoundException exception) {
+    private ResponseEntity<ApiErrorResponse> buildErrorResponse(
+            HttpStatus status,
+            String message,
+            WebRequest request) {
 
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
-	}
-	
-	@ExceptionHandler(InvalidUserIdException.class)
-	public ResponseEntity<?> handleInvalidUserException(InvalidUserIdException exception) {
+        return buildErrorResponse(
+                status,
+                message,
+                request,
+                Map.of()
+        );
+    }
 
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
-	}
-	
-	@ExceptionHandler(BadCredentialsException.class)
-	public ResponseEntity<String> handleBadCredentials(
-	        BadCredentialsException exception) {
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiErrorResponse> handleValidationException(
+            MethodArgumentNotValidException exception,
+            WebRequest request) {
 
-	    return ResponseEntity
-	            .status(HttpStatus.UNAUTHORIZED)
-	            .body(exception.getMessage());
-	}
-	
-	@ExceptionHandler(AccessDeniedException.class)
-	public ResponseEntity<String> handleAccessDenied(AccessDeniedException exception){
-		return ResponseEntity.status(HttpStatus.FORBIDDEN).body("InValid Access");
-	}
-	
-	@ExceptionHandler(JobNotFoundException.class)
-	public ResponseEntity<String> handleJobNotFoundException(
-	        JobNotFoundException exception) {
+        Map<String, String> errors = new HashMap<>();
 
-	    return ResponseEntity
-	            .status(HttpStatus.NOT_FOUND)
-	            .body(exception.getMessage());
-	}
-	
-	@ExceptionHandler(IllegalArgumentException.class)
-	public ResponseEntity<Map<String, String>> handleIllegalArgumentException(
-	        IllegalArgumentException ex) {
+        for (FieldError error :
+                exception.getBindingResult().getFieldErrors()) {
 
-	    Map<String, String> error = new HashMap<>();
-	    error.put("error", ex.getMessage());
+            errors.put(error.getField(), error.getDefaultMessage());
+        }
 
-	    return ResponseEntity.badRequest().body(error);
-	}
-	
-	
-	@ExceptionHandler(DuplicateApplicationException.class)
-	public ResponseEntity<String> handleDuplicateApplication(
-	        DuplicateApplicationException exception) {
-	
-	    return ResponseEntity
-	            .status(HttpStatus.CONFLICT)
-	            .body(exception.getMessage());
-	}
-	
-	
-	@ExceptionHandler(JobNotOpenException.class)
-	public ResponseEntity<String> handleJobNotOpen(
-	        JobNotOpenException exception) {
-	
-	    return ResponseEntity
-	            .status(HttpStatus.CONFLICT)
-	            .body(exception.getMessage());
-	}
-	
-	@ExceptionHandler(ApplicationNotFoundException.class)
-	public ResponseEntity<String> handleApplicationNotFound(
-	        ApplicationNotFoundException exception) {
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                "Validation failed",
+                request,
+                errors
+        );
+    }
 
-	    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-	            .body(exception.getMessage());
-	}
-	
-	@ExceptionHandler(RecruiterProfileNotFoundException.class)
-	public ResponseEntity<String> handleRecruiterProfileNotFound(
-	        RecruiterProfileNotFoundException ex) {
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<ApiErrorResponse> handleEmailException(
+            DuplicateEmailException exception,
+            WebRequest request) {
 
-	    return ResponseEntity
-	            .status(HttpStatus.NOT_FOUND)
-	            .body(ex.getMessage());
-	}
+        return buildErrorResponse(
+                HttpStatus.CONFLICT,
+                exception.getMessage(),
+                request
+        );
+    }
 
-	@ExceptionHandler(RecruiterProfileAlreadyExistsException.class)
-	public ResponseEntity<String> handleRecruiterProfileAlreadyExists(
-	        RecruiterProfileAlreadyExistsException ex) {
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleUserNotFoundException(
+            UserNotFoundException exception,
+            WebRequest request) {
 
-	    return ResponseEntity
-	            .status(HttpStatus.CONFLICT)
-	            .body(ex.getMessage());
-	}
-	
-	@ExceptionHandler(ForbiddenAccessException.class)
-	public ResponseEntity<String> handleForbiddenAccess(
-	        ForbiddenAccessException ex) {
+        return buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                request
+        );
+    }
 
-	    return ResponseEntity
-	            .status(HttpStatus.FORBIDDEN)
-	            .body(ex.getMessage());
-	}
-	
-	
-	@ExceptionHandler(ResumeNotFoundException.class)
-	public ResponseEntity<String> handleResumeNotFound(
-	        ResumeNotFoundException ex) {
-	
-	    return ResponseEntity
-	            .status(HttpStatus.NOT_FOUND)
-	            .body(ex.getMessage());
-	}
-	
-	@ExceptionHandler(InvalidResumeException.class)
-	public ResponseEntity<String> handleInvalidResume(
-	        InvalidResumeException ex) {
-	
-	    return ResponseEntity
-	            .status(HttpStatus.BAD_REQUEST)
-	            .body(ex.getMessage());
-	}
-	
-	@ExceptionHandler(IllegalStateException.class)
-	public ResponseEntity<String> handleIllegalStateException(
-	        IllegalStateException exception) {
+    @ExceptionHandler(InvalidUserIdException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidUserException(
+            InvalidUserIdException exception,
+            WebRequest request) {
 
-	    return ResponseEntity
-	            .status(HttpStatus.BAD_REQUEST)
-	            .body(exception.getMessage());
-	}
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                exception.getMessage(),
+                request
+        );
+    }
 
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleBadCredentials(
+            BadCredentialsException exception,
+            WebRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.UNAUTHORIZED,
+                "Invalid email or password",
+                request
+        );
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDenied(
+            AccessDeniedException exception,
+            WebRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.FORBIDDEN,
+                "Access denied",
+                request
+        );
+    }
+
+    @ExceptionHandler(JobNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleJobNotFoundException(
+            JobNotFoundException exception,
+            WebRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiErrorResponse> handleIllegalArgumentException(
+            IllegalArgumentException exception,
+            WebRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(DuplicateApplicationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDuplicateApplication(
+            DuplicateApplicationException exception,
+            WebRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.CONFLICT,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(JobNotOpenException.class)
+    public ResponseEntity<ApiErrorResponse> handleJobNotOpen(
+            JobNotOpenException exception,
+            WebRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.CONFLICT,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(ApplicationNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleApplicationNotFound(
+            ApplicationNotFoundException exception,
+            WebRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(RecruiterProfileNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleRecruiterProfileNotFound(
+            RecruiterProfileNotFoundException exception,
+            WebRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(RecruiterProfileAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleRecruiterProfileAlreadyExists(
+            RecruiterProfileAlreadyExistsException exception,
+            WebRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.CONFLICT,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(ForbiddenAccessException.class)
+    public ResponseEntity<ApiErrorResponse> handleForbiddenAccess(
+            ForbiddenAccessException exception,
+            WebRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.FORBIDDEN,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(ResumeNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleResumeNotFound(
+            ResumeNotFoundException exception,
+            WebRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(InvalidResumeException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidResume(
+            InvalidResumeException exception,
+            WebRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(CandidatePreferenceNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleCandidatePreferenceNotFound(
+            CandidatePreferenceNotFoundException exception,
+            WebRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(CandidatePreferenceAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleCandidatePreferenceAlreadyExists(
+            CandidatePreferenceAlreadyExistsException exception,
+            WebRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.CONFLICT,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(SavedSearchNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleSavedSearchNotFound(
+            SavedSearchNotFoundException exception,
+            WebRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiErrorResponse> handleUnexpectedException(
+            Exception exception,
+            WebRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred",
+                request
+        );
+    }
+	@ExceptionHandler(ResponseStatusException.class)
+	public ResponseEntity<ApiErrorResponse> handleResponseStatusException(
+	        ResponseStatusException exception,
+	        WebRequest request) {
 	
-	@ExceptionHandler(CandidatePreferenceNotFoundException.class)
-	public ResponseEntity<String> handleCandidatePreferenceNotFound(
-	        CandidatePreferenceNotFoundException exception) {
+	    HttpStatus status = HttpStatus.valueOf(
+	            exception.getStatusCode().value()
+	    );
 	
-	    return ResponseEntity
-	            .status(HttpStatus.NOT_FOUND)
-	            .body(exception.getMessage());
+	    String message = exception.getReason() != null
+	            ? exception.getReason()
+	            : status.getReasonPhrase();
+	
+	    return buildErrorResponse(
+	            status,
+	            message,
+	            request
+	    );
 	}
 	
-	@ExceptionHandler(CandidatePreferenceAlreadyExistsException.class)
-	public ResponseEntity<String> handleCandidatePreferenceAlreadyExists(
-	        CandidatePreferenceAlreadyExistsException exception) {
-	
-	    return ResponseEntity
-	            .status(HttpStatus.CONFLICT)
-	            .body(exception.getMessage());
-	}
-	
-	@ExceptionHandler(SavedSearchNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleSavedSearchNotFound(
-	        SavedSearchNotFoundException ex) {
+	@ExceptionHandler(MaxUploadSizeExceededException.class)
+	public ResponseEntity<ApiErrorResponse> handleMaxUploadSizeExceeded(
+	        MaxUploadSizeExceededException exception,
+	        WebRequest request) {
 
-	    Map<String, String> error = new HashMap<>();
-	    error.put("error", ex.getMessage());
-
-	    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+	    return buildErrorResponse(
+	            HttpStatus.BAD_REQUEST,
+	            "Resume size must not exceed 5 MB",
+	            request
+	    );
 	}
 
 }

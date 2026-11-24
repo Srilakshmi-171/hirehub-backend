@@ -24,36 +24,11 @@ public class InterviewResponse {
     private InterviewResult result;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    
+
     private Long recruiterId;
     private String recruiterName;
-    private String recruiterEmail;
-    
-    public Long getRecruiterId() {
-		return recruiterId;
-	}
 
-	public void setRecruiterId(Long recruiterId) {
-		this.recruiterId = recruiterId;
-	}
-
-	public String getRecruiterName() {
-		return recruiterName;
-	}
-
-	public void setRecruiterName(String recruiterName) {
-		this.recruiterName = recruiterName;
-	}
-
-	public String getRecruiterEmail() {
-		return recruiterEmail;
-	}
-
-	public void setRecruiterEmail(String recruiterEmail) {
-		this.recruiterEmail = recruiterEmail;
-	}
-
-	private LocalDateTime requestedNewTime;
+    private LocalDateTime requestedNewTime;
     private String rescheduleReason;
 
     public Long getId() {
@@ -164,18 +139,34 @@ public class InterviewResponse {
         return createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-    
+
+    public Long getRecruiterId() {
+        return recruiterId;
+    }
+
+    public void setRecruiterId(Long recruiterId) {
+        this.recruiterId = recruiterId;
+    }
+
+    public String getRecruiterName() {
+        return recruiterName;
+    }
+
+    public void setRecruiterName(String recruiterName) {
+        this.recruiterName = recruiterName;
+    }
+
     public LocalDateTime getRequestedNewTime() {
         return requestedNewTime;
     }

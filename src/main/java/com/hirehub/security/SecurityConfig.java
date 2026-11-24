@@ -1,31 +1,43 @@
 
 package com.hirehub.security;
 
+import java.time.LocalDateTime;
+import java.util.Map;
+import tools.jackson.databind.ObjectMapper;
+import com.hirehub.dto.ApiErrorResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.DispatcherType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 public class SecurityConfig {
-	
-	private static final Logger logger =
-	        LoggerFactory.getLogger(SecurityConfig.class);
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(SecurityConfig.class);
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ObjectMapper objectMapper;
 
     public SecurityConfig(
-            JwtAuthenticationFilter jwtAuthenticationFilter) {
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            ObjectMapper objectMapper) {
+
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.objectMapper = objectMapper;
     }
 
     @Bean
@@ -42,12 +54,29 @@ public class SecurityConfig {
             .httpBasic(basic -> basic.disable())
 
             .exceptionHandling(exceptions -> exceptions
+
+                // Authentication failure: 401
                 .authenticationEntryPoint((request, response, exception) -> {
-                    response.sendError(
-                        HttpServletResponse.SC_UNAUTHORIZED,
-                        "Authentication required"
+
+                    ApiErrorResponse errorResponse = new ApiErrorResponse(
+                            LocalDateTime.now(),
+                            HttpStatus.UNAUTHORIZED.value(),
+                            HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+                            "Authentication required",
+                            request.getRequestURI(),
+                            Map.of()
+                    );
+
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
+                    objectMapper.writeValue(
+                            response.getOutputStream(),
+                            errorResponse
                     );
                 })
+
+                // Authorization failure: 403
                 .accessDeniedHandler((request, response, exception) -> {
 
                     logger.warn(
@@ -57,9 +86,21 @@ public class SecurityConfig {
                             exception.getClass().getSimpleName()
                     );
 
-                    response.sendError(
-                            HttpServletResponse.SC_FORBIDDEN,
-                            "Access denied"
+                    ApiErrorResponse errorResponse = new ApiErrorResponse(
+                            LocalDateTime.now(),
+                            HttpStatus.FORBIDDEN.value(),
+                            HttpStatus.FORBIDDEN.getReasonPhrase(),
+                            "Access denied",
+                            request.getRequestURI(),
+                            Map.of()
+                    );
+
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
+                    objectMapper.writeValue(
+                            response.getOutputStream(),
+                            errorResponse
                     );
                 })
             )
@@ -94,7 +135,6 @@ public class SecurityConfig {
                 ).hasRole("RECRUITER")
 
                 // Only candidates can remove saved jobs
-                // Must be before the general DELETE rule
                 .requestMatchers(
                     HttpMethod.DELETE,
                     "/api/jobs/*/save"
@@ -107,14 +147,12 @@ public class SecurityConfig {
                 ).hasRole("RECRUITER")
 
                 // Only recruiters can update application statuses
-                // PATCH endpoints
                 .requestMatchers(
                     HttpMethod.PATCH,
                     "/api/applications/**"
                 ).hasRole("RECRUITER")
 
-                // Only recruiters can update application statuses
-                // PUT endpoint used by ApplicationController
+                // Application PUT endpoints
                 .requestMatchers(
                     HttpMethod.PUT,
                     "/api/applications/**"
@@ -262,6 +300,10 @@ public class SecurityConfig {
                 // Recruiter reports
                 .requestMatchers(
                     "/api/recruiter/reports/**"
+                ).hasRole("RECRUITER")
+             // Only recruiters can manage their own recruiter profiles
+                .requestMatchers(
+                    "/api/recruiters/me/profile"
                 ).hasRole("RECRUITER")
 
                 // All remaining endpoints require authentication

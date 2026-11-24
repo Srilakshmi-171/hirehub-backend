@@ -22,47 +22,38 @@ public class CandidateResumeController {
 
     private final CandidateResumeService resumeService;
 
-    public CandidateResumeController(
-            CandidateResumeService resumeService) {
+    public CandidateResumeController(CandidateResumeService resumeService) {
         this.resumeService = resumeService;
     }
 
-    // Upload or replace resume
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CandidateResumeResponse> uploadResume(
             @RequestParam("file") MultipartFile file,
             Authentication authentication) {
 
-        Long candidateId =
-                (Long) authentication.getPrincipal();
+        Long candidateId = (Long) authentication.getPrincipal();
 
         CandidateResumeResponse response =
                 resumeService.uploadResume(candidateId, file);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // Get resume details
     @GetMapping
     public ResponseEntity<CandidateResumeResponse> getResume(
             Authentication authentication) {
 
-        Long candidateId =
-                (Long) authentication.getPrincipal();
+        Long candidateId = (Long) authentication.getPrincipal();
 
         return ResponseEntity.ok(
                 resumeService.getResumeDetails(candidateId));
     }
 
-    // Download resume
     @GetMapping("/download")
     public ResponseEntity<byte[]> downloadResume(
             Authentication authentication) {
 
-        Long candidateId =
-                (Long) authentication.getPrincipal();
+        Long candidateId = (Long) authentication.getPrincipal();
 
         CandidateResume resume =
                 resumeService.getResumeForDownload(candidateId);
@@ -82,40 +73,14 @@ public class CandidateResumeController {
                 HttpStatus.OK);
     }
 
-    // Delete resume
     @DeleteMapping
     public ResponseEntity<String> deleteResume(
             Authentication authentication) {
 
-        Long candidateId =
-                (Long) authentication.getPrincipal();
+        Long candidateId = (Long) authentication.getPrincipal();
 
         resumeService.deleteResume(candidateId);
 
-        return ResponseEntity.ok(
-                "Resume deleted successfully");
-    }
-    
-    @GetMapping("/api/applications/{applicationId}/resume")
-    public ResponseEntity<byte[]> downloadResumeForRecruiter(
-            @PathVariable Long applicationId,
-            Authentication authentication) {
-
-        Long recruiterId = (Long) authentication.getPrincipal();
-
-        CandidateResume resume = resumeService.getResumeForRecruiter(
-                applicationId, recruiterId);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDisposition(
-                ContentDisposition.attachment()
-                        .filename(resume.getFileName())
-                        .build());
-
-        return new ResponseEntity<>(
-                resume.getFileData(),
-                headers,
-                HttpStatus.OK);
+        return ResponseEntity.ok("Resume deleted successfully");
     }
 }
