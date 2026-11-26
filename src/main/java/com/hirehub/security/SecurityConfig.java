@@ -3,7 +3,7 @@ package com.hirehub.security;
 
 import java.time.LocalDateTime;
 import java.util.Map;
-import tools.jackson.databind.ObjectMapper;
+
 import com.hirehub.dto.ApiErrorResponse;
 
 import org.slf4j.Logger;
@@ -22,6 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
+import tools.jackson.databind.ObjectMapper;
 
 @Configuration
 public class SecurityConfig {
@@ -107,9 +108,17 @@ public class SecurityConfig {
 
             .authorizeHttpRequests(auth -> auth
 
+                // Allow Spring error dispatches
                 .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
 
-                // Public endpoints
+                // Swagger and OpenAPI documentation - public access
+                .requestMatchers(
+                    "/v3/api-docs/**",
+                    "/swagger-ui/**",
+                    "/swagger-ui.html"
+                ).permitAll()
+
+                // Public authentication endpoints
                 .requestMatchers(
                     HttpMethod.POST,
                     "/api/users/register",
@@ -301,7 +310,8 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/api/recruiter/reports/**"
                 ).hasRole("RECRUITER")
-             // Only recruiters can manage their own recruiter profiles
+
+                // Only recruiters can manage their own recruiter profiles
                 .requestMatchers(
                     "/api/recruiters/me/profile"
                 ).hasRole("RECRUITER")
@@ -310,6 +320,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
 
+            // Add JWT authentication filter
             .addFilterBefore(
                 jwtAuthenticationFilter,
                 UsernamePasswordAuthenticationFilter.class
@@ -318,6 +329,7 @@ public class SecurityConfig {
         return http.build();
     }
 
+    // Prevent duplicate servlet registration of the JWT filter
     @Bean
     public FilterRegistrationBean<JwtAuthenticationFilter>
             jwtFilterServletRegistration(

@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hirehub.service.RecruiterReportService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 @RestController
 @RequestMapping("/api/recruiter/reports")
 public class RecruiterReportController {
@@ -26,6 +28,7 @@ public class RecruiterReportController {
         this.reportService = reportService;
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/applications")
     public ResponseEntity<byte[]> exportApplications(
             Authentication authentication,
@@ -46,6 +49,7 @@ public class RecruiterReportController {
         return createFileResponse(file, "applications", format);
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/interviews")
     public ResponseEntity<byte[]> exportInterviews(
             Authentication authentication,
@@ -66,6 +70,7 @@ public class RecruiterReportController {
         return createFileResponse(file, "interviews", format);
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/jobs")
     public ResponseEntity<byte[]> exportJobs(
             Authentication authentication,

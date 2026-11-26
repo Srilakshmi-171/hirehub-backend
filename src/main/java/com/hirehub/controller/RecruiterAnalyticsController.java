@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.hirehub.dto.RecruiterAnalyticsResponse;
 import com.hirehub.service.RecruiterAnalyticsService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 @RestController
 @RequestMapping("/api/recruiter/analytics")
 public class RecruiterAnalyticsController {
@@ -25,6 +27,7 @@ public class RecruiterAnalyticsController {
         this.analyticsService = analyticsService;
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping
     public ResponseEntity<RecruiterAnalyticsResponse> getAnalytics(
             Authentication authentication,

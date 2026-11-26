@@ -12,6 +12,7 @@ import com.hirehub.dto.SavedSearchRequest;
 import com.hirehub.dto.SavedSearchResponse;
 import com.hirehub.service.SavedSearchService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
 @RestController
@@ -26,6 +27,7 @@ public class SavedSearchController {
     }
 
     // Create a saved search
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping
     public ResponseEntity<SavedSearchResponse> createSavedSearch(
             @Valid @RequestBody SavedSearchRequest request,
@@ -42,6 +44,7 @@ public class SavedSearchController {
     }
 
     // Get all saved searches
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping
     public ResponseEntity<List<SavedSearchResponse>> getMySavedSearches(
             Authentication authentication) {
@@ -53,6 +56,7 @@ public class SavedSearchController {
     }
 
     // Update a saved search
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/{searchId}")
     public ResponseEntity<SavedSearchResponse> updateSavedSearch(
             @PathVariable Long searchId,
@@ -67,6 +71,7 @@ public class SavedSearchController {
     }
 
     // Delete a saved search
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{searchId}")
     public ResponseEntity<Void> deleteSavedSearch(
             @PathVariable Long searchId,

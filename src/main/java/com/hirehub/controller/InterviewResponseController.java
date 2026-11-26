@@ -9,6 +9,7 @@ import com.hirehub.dto.RescheduleDecisionRequest;
 import com.hirehub.dto.RescheduleInterviewRequest;
 import com.hirehub.service.InterviewService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,7 @@ public class InterviewResponseController {
         this.interviewService = interviewService;
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{interviewId}/response")
     public ResponseEntity<InterviewResponse> respondToInterview(
             @PathVariable Long interviewId,
@@ -47,6 +49,7 @@ public class InterviewResponseController {
         return ResponseEntity.ok(response);
     }
     
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{interviewId}/reschedule")
     public ResponseEntity<InterviewResponse> requestReschedule(
             @PathVariable Long interviewId,
@@ -60,6 +63,7 @@ public class InterviewResponseController {
                         interviewId, candidateId, request));
     }
     
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{interviewId}/reschedule-decision")
     public ResponseEntity<InterviewResponse> decideReschedule(
             @PathVariable Long interviewId,
@@ -73,6 +77,7 @@ public class InterviewResponseController {
                         interviewId, recruiterId, request));
     }
     
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{interviewId}/cancel")
     public ResponseEntity<InterviewResponse> cancelInterview(
             @PathVariable Long interviewId,
@@ -85,6 +90,7 @@ public class InterviewResponseController {
         );
     }
     
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{interviewId}/complete")
     public ResponseEntity<InterviewResponse> completeInterview(
             @PathVariable Long interviewId,
@@ -99,6 +105,7 @@ public class InterviewResponseController {
         );
     }
     
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/{interviewId}/feedback")
     public ResponseEntity<InterviewFeedbackResponse> getInterviewFeedback(
             @PathVariable Long interviewId,
@@ -112,7 +119,7 @@ public class InterviewResponseController {
         );
     }
     
-	
+    @SecurityRequirement(name = "bearerAuth")
 	@GetMapping("/{interviewId}/candidate-feedback")
 	public ResponseEntity<InterviewFeedbackResponse> getCandidateInterviewFeedback(
 	        @PathVariable Long interviewId,

@@ -11,6 +11,8 @@ import com.hirehub.dto.SavedJobResponse;
 import com.hirehub.entity.SavedJob;
 import com.hirehub.service.SavedJobService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 @RestController
 @RequestMapping("/api/jobs")
 public class SavedJobController {
@@ -22,6 +24,7 @@ public class SavedJobController {
     }
 
     // Save a job
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/{jobId}/save")
     public ResponseEntity<String> saveJob(
             @PathVariable Long jobId,
@@ -36,6 +39,7 @@ public class SavedJobController {
     }
 
     // Get all saved jobs
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/saved")
     public ResponseEntity<List<SavedJobResponse>> getSavedJobs(
             Authentication authentication) {
@@ -47,6 +51,7 @@ public class SavedJobController {
     }
 
     // Remove a saved job
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{jobId}/save")
     public ResponseEntity<String> removeSavedJob(
             @PathVariable Long jobId,

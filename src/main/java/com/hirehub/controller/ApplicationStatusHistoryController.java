@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.hirehub.dto.ApplicationStatusHistoryResponse;
 import com.hirehub.service.ApplicationStatusHistoryService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 @RestController
 @RequestMapping("/api/applications")
 public class ApplicationStatusHistoryController {
@@ -24,6 +26,7 @@ public class ApplicationStatusHistoryController {
         this.historyService = historyService;
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/{applicationId}/history")
     public ResponseEntity<List<ApplicationStatusHistoryResponse>>
             getApplicationHistory(

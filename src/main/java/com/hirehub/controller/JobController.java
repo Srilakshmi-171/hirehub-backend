@@ -29,6 +29,7 @@ import com.hirehub.repository.UserRepository;
 import com.hirehub.service.ApplicationService;
 import com.hirehub.service.JobService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import java.util.List;
 
@@ -52,6 +53,7 @@ public class JobController {
         this.applicationService = applicationService;
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping
     public ResponseEntity<JobResponse> createJob(
             @Valid @RequestBody CreateJobRequest request,
@@ -84,6 +86,7 @@ public class JobController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/{id}")
     public ResponseEntity<JobResponse> getJobById(
             @PathVariable Long id) {
@@ -107,6 +110,7 @@ public class JobController {
         return ResponseEntity.ok(response);
     }
     
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/{id}")
     public ResponseEntity<JobResponse> updateJob(
             @PathVariable Long id,
@@ -134,6 +138,7 @@ public class JobController {
         return ResponseEntity.ok(response);
     }
     
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteJob(
             @PathVariable Long id,
@@ -146,7 +151,7 @@ public class JobController {
         return ResponseEntity.noContent().build();
     }
     
-    
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/search")
     public ResponseEntity<List<JobResponse>> searchActiveJobs(
             @RequestParam(required = false) String keyword,
@@ -180,6 +185,7 @@ public class JobController {
         return response;
     }
     
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping
     public ResponseEntity<List<JobResponse>> getAllActiveJobs(
             @RequestParam(defaultValue = "0") int page,
@@ -227,6 +233,7 @@ public class JobController {
         return ResponseEntity.ok(responses);
     }
     
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/{jobId}/applications")
     public ResponseEntity<List<ApplicationResponse>> getApplicantsForJob(
             @PathVariable Long jobId,

@@ -5,6 +5,8 @@ import com.hirehub.dto.CandidateResumeResponse;
 import com.hirehub.entity.CandidateResume;
 import com.hirehub.service.CandidateResumeService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -26,6 +28,7 @@ public class CandidateResumeController {
         this.resumeService = resumeService;
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CandidateResumeResponse> uploadResume(
             @RequestParam("file") MultipartFile file,
@@ -39,6 +42,7 @@ public class CandidateResumeController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping
     public ResponseEntity<CandidateResumeResponse> getResume(
             Authentication authentication) {
@@ -49,6 +53,7 @@ public class CandidateResumeController {
                 resumeService.getResumeDetails(candidateId));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/download")
     public ResponseEntity<byte[]> downloadResume(
             Authentication authentication) {
@@ -73,6 +78,7 @@ public class CandidateResumeController {
                 HttpStatus.OK);
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping
     public ResponseEntity<String> deleteResume(
             Authentication authentication) {

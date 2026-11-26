@@ -11,6 +11,7 @@ import com.hirehub.dto.AdminUserResponse;
 import com.hirehub.dto.UpdateAccountStatusRequest;
 import com.hirehub.service.AdminService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
 @RestController
@@ -24,6 +25,7 @@ public class AdminController {
     }
 
     // Get all users
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/users")
     public ResponseEntity<List<AdminUserResponse>> getAllUsers() {
 
@@ -31,6 +33,7 @@ public class AdminController {
     }
 
     // Get user by ID
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/users/{userId}")
     public ResponseEntity<AdminUserResponse> getUserById(
             @PathVariable Long userId) {
@@ -39,6 +42,7 @@ public class AdminController {
     }
 
     // Activate or deactivate user
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/users/{userId}/status")
     public ResponseEntity<AdminUserResponse> updateAccountStatus(
             @PathVariable Long userId,
@@ -50,6 +54,7 @@ public class AdminController {
     }
 
     // Get all jobs, including deleted jobs
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/jobs")
     public ResponseEntity<List<AdminJobResponse>> getAllJobs() {
 
@@ -57,6 +62,7 @@ public class AdminController {
     }
 
     // Get job by ID, including deleted jobs
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/jobs/{jobId}")
     public ResponseEntity<AdminJobResponse> getJobById(
             @PathVariable Long jobId) {
@@ -65,6 +71,7 @@ public class AdminController {
     }
 
     // Remove job (soft delete)
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/jobs/{jobId}/remove")
     public ResponseEntity<String> removeJob(
             @PathVariable Long jobId) {

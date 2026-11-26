@@ -12,6 +12,8 @@ import com.hirehub.dto.PreferenceRequest;
 import com.hirehub.dto.PreferenceResponse;
 import com.hirehub.service.CandidatePreferenceService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 @RestController
 @RequestMapping("/api/candidates/me/preferences")
 public class CandidatePreferenceController {
@@ -24,6 +26,7 @@ public class CandidatePreferenceController {
     }
 
     // Create candidate preferences
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping
     public ResponseEntity<PreferenceResponse> createPreferences(
             @Valid @RequestBody PreferenceRequest request,
@@ -38,6 +41,7 @@ public class CandidatePreferenceController {
     }
 
     // Get candidate preferences
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping
     public ResponseEntity<PreferenceResponse> getPreferences(
             Authentication authentication) {
@@ -49,6 +53,7 @@ public class CandidatePreferenceController {
     }
 
     // Update candidate preferences
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping
     public ResponseEntity<PreferenceResponse> updatePreferences(
             @Valid @RequestBody PreferenceRequest request,

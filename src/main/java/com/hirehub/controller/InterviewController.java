@@ -7,6 +7,7 @@ import com.hirehub.dto.InterviewResponse;
 import com.hirehub.dto.ScheduleInterviewRequest;
 import com.hirehub.service.InterviewService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+
 @RequestMapping("/api/applications")
 public class InterviewController {
 
@@ -30,6 +32,7 @@ public class InterviewController {
     }
 
     // Recruiter schedules an interview
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/{applicationId}/interviews")
     public ResponseEntity<InterviewResponse> scheduleInterview(
             @PathVariable Long applicationId,
@@ -50,6 +53,7 @@ public class InterviewController {
     }
 
     // Candidate or owning recruiter views interview rounds
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/{applicationId}/interviews")
     public ResponseEntity<List<InterviewResponse>> getInterviews(
             @PathVariable Long applicationId,

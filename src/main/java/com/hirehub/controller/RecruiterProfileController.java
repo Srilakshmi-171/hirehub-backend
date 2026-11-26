@@ -8,6 +8,7 @@ import com.hirehub.dto.RecruiterProfileRequest;
 import com.hirehub.dto.RecruiterProfileResponse;
 import com.hirehub.service.RecruiterProfileService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
 @RestController
@@ -21,6 +22,7 @@ public class RecruiterProfileController {
         this.recruiterProfileService = recruiterProfileService;
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping
     public RecruiterProfileResponse getMyProfile(
             Authentication authentication) {
@@ -30,6 +32,7 @@ public class RecruiterProfileController {
         return recruiterProfileService.getMyProfile(userId);
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public RecruiterProfileResponse createMyProfile(
@@ -41,6 +44,7 @@ public class RecruiterProfileController {
         return recruiterProfileService.createMyProfile(userId, request);
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping
     public RecruiterProfileResponse updateMyProfile(
             Authentication authentication,

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.hirehub.dto.LoginRequest;
 import com.hirehub.dto.LoginResponse;
 import com.hirehub.service.AuthService;
+
 import jakarta.validation.Valid;
 
 @RestController

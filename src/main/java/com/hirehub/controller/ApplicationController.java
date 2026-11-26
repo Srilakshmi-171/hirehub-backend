@@ -7,6 +7,8 @@ import com.hirehub.dto.ApplicationResponse;
 import com.hirehub.entity.Application;
 import com.hirehub.service.ApplicationService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -29,6 +31,7 @@ public class ApplicationController {
     }
 
     // Apply for a job
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/{jobId}/apply")
     public ResponseEntity<String> applyForJob(
             @PathVariable Long jobId,
@@ -49,6 +52,7 @@ public class ApplicationController {
     }
 
     // View applications belonging to the logged-in candidate
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/my")
     public ResponseEntity<List<ApplicationResponse>> getMyApplications(
             Authentication authentication) {
@@ -63,6 +67,7 @@ public class ApplicationController {
     }
 
     // Candidate withdraws an application
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{applicationId}")
     public ResponseEntity<String> withdrawApplication(
             @PathVariable Long applicationId,

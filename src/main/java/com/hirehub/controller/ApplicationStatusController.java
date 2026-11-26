@@ -5,6 +5,7 @@ import com.hirehub.dto.UpdateApplicationStatusRequest;
 import com.hirehub.entity.Application;
 import com.hirehub.service.ApplicationService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,7 @@ public class ApplicationStatusController {
     }
 
     // Recruiter updates application status
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{applicationId}/status")
     public ResponseEntity<String> updateApplicationStatus(
             @PathVariable Long applicationId,

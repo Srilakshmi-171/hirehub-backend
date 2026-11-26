@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.hirehub.dto.JobRecommendationResponse;
 import com.hirehub.service.JobRecommendationService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 @RestController
 @RequestMapping("/api/candidates/me/recommendations")
 public class JobRecommendationController {
@@ -23,6 +25,7 @@ public class JobRecommendationController {
         this.recommendationService = recommendationService;
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping
     public ResponseEntity<List<JobRecommendationResponse>>
             getRecommendations(Authentication authentication) {

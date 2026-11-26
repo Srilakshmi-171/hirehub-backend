@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import com.hirehub.dto.NotificationResponse;
 import com.hirehub.service.NotificationService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 @RestController
 @RequestMapping("/api/notifications")
 public class NotificationController {
@@ -20,6 +22,7 @@ public class NotificationController {
     }
 
     // Get all my notifications
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping
     public List<NotificationResponse> getMyNotifications(
             Authentication authentication) {
@@ -30,6 +33,7 @@ public class NotificationController {
     }
 
     // Get unread notification count
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/unread-count")
     public long getUnreadCount(Authentication authentication) {
 
@@ -39,6 +43,7 @@ public class NotificationController {
     }
 
     // Mark one notification as read
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{notificationId}/read")
     public NotificationResponse markAsRead(
             @PathVariable Long notificationId,
@@ -51,6 +56,7 @@ public class NotificationController {
     }
 
     // Mark all notifications as read
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/read-all")
     public int markAllAsRead(Authentication authentication) {
 

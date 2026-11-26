@@ -4,6 +4,8 @@ package com.hirehub.controller;
 import com.hirehub.entity.CandidateResume;
 import com.hirehub.service.CandidateResumeService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -29,6 +31,7 @@ public class RecruiterResumeController {
         this.resumeService = resumeService;
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/{applicationId}/resume")
     public ResponseEntity<byte[]> downloadCandidateResume(
             @PathVariable Long applicationId,

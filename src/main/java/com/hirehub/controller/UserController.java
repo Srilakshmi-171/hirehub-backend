@@ -23,7 +23,7 @@ import com.hirehub.service.JobService;
 import com.hirehub.service.UserService;
 
 import jakarta.validation.Valid;
-
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 @RestController
 public class UserController {
 
@@ -44,6 +44,7 @@ public class UserController {
 		return response;
 	}
 	
+	@SecurityRequirement(name = "bearerAuth")
 	@GetMapping("/api/users/{id}")
 	public UserResponse getUser(@PathVariable Long id, Authentication authentication) throws AccessDeniedException {
 		Long loggedInUserId = (Long) authentication.getPrincipal();
@@ -56,6 +57,7 @@ public class UserController {
 		
 	}
 	
+	@SecurityRequirement(name = "bearerAuth")
 	@PatchMapping("/api/candidates/me")
 	public ResponseEntity<UserResponse> updateCandidateProfile(
 	        @Valid @RequestBody UpdateCandidateProfileRequest request,

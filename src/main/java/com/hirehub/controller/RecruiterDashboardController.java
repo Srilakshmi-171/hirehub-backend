@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.hirehub.dto.RecruiterDashboardResponse;
 import com.hirehub.service.RecruiterDashboardService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 @RestController
 @RequestMapping("/api/recruiter/dashboard")
 public class RecruiterDashboardController {
@@ -20,6 +22,7 @@ public class RecruiterDashboardController {
         this.dashboardService = dashboardService;
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping
     public ResponseEntity<RecruiterDashboardResponse> getDashboard(
             Authentication authentication) {
