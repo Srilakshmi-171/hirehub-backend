@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.hirehub.dto.ApiErrorResponse;
+import com.hirehub.entity.AccountStatus;
 import com.hirehub.entity.User;
 import com.hirehub.repository.UserRepository;
 
@@ -81,6 +82,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         User user = userOptional.get();
+        // Reject users whose accounts are no longer active.
+        if (user.getAccountStatus() != AccountStatus.ACTIVE) {
+            SecurityContextHolder.clearContext();
+            writeUnauthorizedResponse(request, response);
+            return;
+        }
 
         // Load role from database.
         var authorities = List.of(

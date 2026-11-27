@@ -20,15 +20,6 @@ class EmailServiceTest {
     @Test
     void shouldSendApplicationConfirmationEmail() {
 
-        // Identify the Java installation used by Eclipse
-        System.out.println(
-                "Java Home: " + System.getProperty("java.home")
-        );
-
-        System.out.println(
-                "Java Version: " + System.getProperty("java.version")
-        );
-
         String htmlBody =
                 EmailTemplateUtil.applicationConfirmation(
                         "HireHub Test User",
